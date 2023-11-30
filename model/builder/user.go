@@ -1,13 +1,13 @@
-package schemabuilder
+package builder
 
 import (
-	"github.com/okutsen/PasswordManager/schema/apischema"
-	"github.com/okutsen/PasswordManager/schema/controllerSchema"
-	"github.com/okutsen/PasswordManager/schema/dbschema"
+	"github.com/okutsen/PasswordManager/model/api"
+	"github.com/okutsen/PasswordManager/model/controller"
+	"github.com/okutsen/PasswordManager/model/db"
 )
 
-func BuildControllerUserFromDBUser(user *dbschema.User) controllerSchema.User {
-	return controllerSchema.User{
+func BuildControllerUserFromDBUser(user *db.User) controller.User {
+	return controller.User{
 		ID:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
@@ -19,8 +19,8 @@ func BuildControllerUserFromDBUser(user *dbschema.User) controllerSchema.User {
 	}
 }
 
-func BuildControllerUsersFromDBUsers(users []dbschema.User) []controllerSchema.User {
-	usersController := make([]controllerSchema.User, len(users))
+func BuildControllerUsersFromDBUsers(users []db.User) []controller.User {
+	usersController := make([]controller.User, len(users))
 	for i, v := range users {
 		usersController[i] = BuildControllerUserFromDBUser(&v)
 	}
@@ -28,8 +28,8 @@ func BuildControllerUsersFromDBUsers(users []dbschema.User) []controllerSchema.U
 	return usersController
 }
 
-func BuildAPIUserFromControllerUser(user *controllerSchema.User) apischema.User {
-	return apischema.User{
+func BuildAPIUserFromControllerUser(user *controller.User) api.User {
+	return api.User{
 		ID:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
@@ -41,8 +41,8 @@ func BuildAPIUserFromControllerUser(user *controllerSchema.User) apischema.User 
 	}
 }
 
-func BuildAPIUsersFromControllerUsers(users []controllerSchema.User) []apischema.User {
-	usersController := make([]apischema.User, len(users))
+func BuildAPIUsersFromControllerUsers(users []controller.User) []api.User {
+	usersController := make([]api.User, len(users))
 	for i, v := range users {
 		usersController[i] = BuildAPIUserFromControllerUser(&v)
 	}
@@ -50,8 +50,8 @@ func BuildAPIUsersFromControllerUsers(users []controllerSchema.User) []apischema
 	return usersController
 }
 
-func BuildControllerUserFromAPIUser(user *apischema.User) controllerSchema.User {
-	return controllerSchema.User{
+func BuildControllerUserFromAPIUser(user *api.User) controller.User {
+	return controller.User{
 		ID:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
@@ -63,8 +63,8 @@ func BuildControllerUserFromAPIUser(user *apischema.User) controllerSchema.User 
 	}
 }
 
-func BuildDBUserFromControllerUser(user *controllerSchema.User) dbschema.User {
-	return dbschema.User{
+func BuildDBUserFromControllerUser(user *controller.User) db.User {
+	return db.User{
 		ID:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,

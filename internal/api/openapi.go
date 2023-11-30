@@ -5,21 +5,21 @@ import (
 	"github.com/getkin/kin-openapi/openapi3gen"
 	
 	"github.com/okutsen/PasswordManager/internal/log"
-	"github.com/okutsen/PasswordManager/schema/apischema"
+	"github.com/okutsen/PasswordManager/model/api"
 )
 
 func generateSchemas(logger log.Logger) openapi3.Schemas {
 	schemas := make(openapi3.Schemas)
 	gen := openapi3gen.NewGenerator()
-	RecordRef, err := gen.NewSchemaRefForValue(&apischema.Record{}, schemas)
+	RecordRef, err := gen.NewSchemaRefForValue(&api.Record{}, schemas)
 	if err != nil {
 		logger.Fatal("Failed to generate schema from Record")
 	}
-	UserRef, err := gen.NewSchemaRefForValue(&apischema.User{}, schemas)
+	UserRef, err := gen.NewSchemaRefForValue(&api.User{}, schemas)
 	if err != nil {
 		logger.Fatal("Failed to generate schema from User")
 	}
-	ErrorRef, err := gen.NewSchemaRefForValue(&apischema.Error{}, schemas)
+	ErrorRef, err := gen.NewSchemaRefForValue(&api.Error{}, schemas)
 	if err != nil {
 		logger.Fatal("Failed to generate schema from Error")
 	}

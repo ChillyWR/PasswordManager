@@ -1,4 +1,4 @@
-package controllerSchema
+package db
 
 import (
 	"time"

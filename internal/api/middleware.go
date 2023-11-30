@@ -10,14 +10,14 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/okutsen/PasswordManager/internal/log"
-	"github.com/okutsen/PasswordManager/schema/apischema"
+	"github.com/okutsen/PasswordManager/model/api"
 )
 
 func AuthorizationCheck(log log.Logger, next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		tokenStr := r.Header.Get(AuthorizationTokenHPN)
 		if tokenStr == "" {
-			writeResponse(w, apischema.Error{Message: apischema.UnAuthorizedMessage}, http.StatusUnauthorized, log)
+			writeResponse(w, api.Error{Message: api.UnAuthorizedMessage}, http.StatusUnauthorized, log)
 			return
 		}
 		// TODO: use Bearer format
@@ -33,7 +33,7 @@ func AuthorizationCheck(log log.Logger, next httprouter.Handle) httprouter.Handl
 
 		if !token.Valid {
 			log.Warn("Received invalid JSW token")
-			writeResponse(w, apischema.Error{Message: "Invalid token"}, http.StatusUnauthorized, log)
+			writeResponse(w, api.Error{Message: "Invalid token"}, http.StatusUnauthorized, log)
 			return
 		}
 		next(w, r, ps)
@@ -51,8 +51,8 @@ func ContextSetter(logger log.Logger, next http.HandlerFunc) httprouter.Handle {
 			logger.Debugf("Setting new corID: %s", corID.String())
 		}
 		ctx := context.WithValue(r.Context(), RequestContextName, &RequestContext{
-			corID: corID,
-			ps:    ps,
+			corID:  corID,
+			params: ps,
 		})
 		r = r.WithContext(ctx)
 		next(w, r)

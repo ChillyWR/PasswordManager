@@ -1,13 +1,13 @@
-package schemabuilder
+package builder
 
 import (
-	"github.com/okutsen/PasswordManager/schema/apischema"
-	"github.com/okutsen/PasswordManager/schema/controllerSchema"
-	"github.com/okutsen/PasswordManager/schema/dbschema"
+	"github.com/okutsen/PasswordManager/model/api"
+	"github.com/okutsen/PasswordManager/model/controller"
+	"github.com/okutsen/PasswordManager/model/db"
 )
 
-func BuildControllerRecordFromDBRecord(record *dbschema.Record) controllerSchema.Record {
-	return controllerSchema.Record{
+func BuildControllerRecordFromDBRecord(record *db.Record) controller.Record {
+	return controller.Record{
 		ID:          record.ID,
 		Name:        record.Name,
 		Login:       record.Login,
@@ -21,8 +21,8 @@ func BuildControllerRecordFromDBRecord(record *dbschema.Record) controllerSchema
 	}
 }
 
-func BuildControllerRecordsFromDBRecords(records []dbschema.Record) []controllerSchema.Record {
-	recordsController := make([]controllerSchema.Record, len(records))
+func BuildControllerRecordsFromDBRecords(records []db.Record) []controller.Record {
+	recordsController := make([]controller.Record, len(records))
 	for i, v := range records {
 		recordsController[i] = BuildControllerRecordFromDBRecord(&v)
 	}
@@ -30,8 +30,8 @@ func BuildControllerRecordsFromDBRecords(records []dbschema.Record) []controller
 	return recordsController
 }
 
-func BuildAPIRecordFromControllerRecord(record *controllerSchema.Record) apischema.Record {
-	return apischema.Record{
+func BuildAPIRecordFromControllerRecord(record *controller.Record) api.Record {
+	return api.Record{
 		ID:          record.ID,
 		Name:        record.Name,
 		Login:       record.Login,
@@ -45,8 +45,8 @@ func BuildAPIRecordFromControllerRecord(record *controllerSchema.Record) apische
 	}
 }
 
-func BuildAPIRecordsFromControllerRecords(records []controllerSchema.Record) []apischema.Record {
-	recordsController := make([]apischema.Record, len(records))
+func BuildAPIRecordsFromControllerRecords(records []controller.Record) []api.Record {
+	recordsController := make([]api.Record, len(records))
 	for i, v := range records {
 		recordsController[i] = BuildAPIRecordFromControllerRecord(&v)
 	}
@@ -54,8 +54,8 @@ func BuildAPIRecordsFromControllerRecords(records []controllerSchema.Record) []a
 	return recordsController
 }
 
-func BuildControllerRecordFromAPIRecord(record *apischema.Record) controllerSchema.Record {
-	return controllerSchema.Record{
+func BuildControllerRecordFromAPIRecord(record *api.Record) controller.Record {
+	return controller.Record{
 		ID:          record.ID,
 		Name:        record.Name,
 		Login:       record.Login,
@@ -69,8 +69,8 @@ func BuildControllerRecordFromAPIRecord(record *apischema.Record) controllerSche
 	}
 }
 
-func BuildDBRecordFromControllerRecord(record *controllerSchema.Record) dbschema.Record {
-	return dbschema.Record{
+func BuildDBRecordFromControllerRecord(record *controller.Record) db.Record {
+	return db.Record{
 		ID:          record.ID,
 		Name:        record.Name,
 		Login:       record.Login,

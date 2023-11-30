@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
+
 	"github.com/okutsen/PasswordManager/internal/log"
 )
 

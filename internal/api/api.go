@@ -11,8 +11,8 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/okutsen/PasswordManager/internal/log"
-	"github.com/okutsen/PasswordManager/schema/apischema"
-	"github.com/okutsen/PasswordManager/schema/controllerSchema"
+	"github.com/okutsen/PasswordManager/model/api"
+	"github.com/okutsen/PasswordManager/model/controller"
 )
 
 const (
@@ -26,22 +26,22 @@ const (
 )
 
 type Controller interface {
-	AllRecords() ([]controllerSchema.Record, error)
-	Record(id uuid.UUID) (*controllerSchema.Record, error)
-	CreateRecord(record *controllerSchema.Record) (*controllerSchema.Record, error)
-	UpdateRecord(id uuid.UUID, record *controllerSchema.Record) (*controllerSchema.Record, error)
-	DeleteRecord(id uuid.UUID) (*controllerSchema.Record, error)
+	AllRecords() ([]controller.Record, error)
+	Record(id uuid.UUID) (*controller.Record, error)
+	CreateRecord(record *controller.Record) (*controller.Record, error)
+	UpdateRecord(id uuid.UUID, record *controller.Record) (*controller.Record, error)
+	DeleteRecord(id uuid.UUID) (*controller.Record, error)
 
-	AllUsers() ([]controllerSchema.User, error)
-	User(id uuid.UUID) (*controllerSchema.User, error)
-	CreateUser(user *controllerSchema.User) (*controllerSchema.User, error)
-	UpdateUser(id uuid.UUID, user *controllerSchema.User) (*controllerSchema.User, error)
-	DeleteUser(id uuid.UUID) (*controllerSchema.User, error)
+	AllUsers() ([]controller.User, error)
+	User(id uuid.UUID) (*controller.User, error)
+	CreateUser(user *controller.User) (*controller.User, error)
+	UpdateUser(id uuid.UUID, user *controller.User) (*controller.User, error)
+	DeleteUser(id uuid.UUID) (*controller.User, error)
 }
 
 type RequestContext struct {
-	corID uuid.UUID
-	ps    httprouter.Params
+	corID  uuid.UUID
+	params httprouter.Params
 }
 
 type API struct {
@@ -164,7 +164,7 @@ func NewFreeAccessHandler(logger log.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token, err := GenerateJWT(uuid.NewString())
 		if err != nil {
-			writeResponse(w, apischema.Error{Message: "Oops, failed to generate your token"}, http.StatusOK, logger)
+			writeResponse(w, api.Error{Message: "Oops, failed to generate your token"}, http.StatusOK, logger)
 		}
 		t := struct {
 			Message string `json:"message,omitempty"`
