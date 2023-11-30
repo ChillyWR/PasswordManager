@@ -1,9 +1,11 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3gen"
-	
+
 	"github.com/okutsen/PasswordManager/internal/log"
 	"github.com/okutsen/PasswordManager/model/api"
 )
@@ -33,7 +35,7 @@ func generateSchemas(logger log.Logger) openapi3.Schemas {
 
 // NewOpenAPIv3 instantiates the OpenAPI specification
 func NewOpenAPIv3(cfg *Config, logger log.Logger) *openapi3.T {
-	spec := &openapi3.T{
+	spec := openapi3.T{
 		OpenAPI: "3.0.0",
 		Info: &openapi3.Info{
 			Title:       "Password Manager",
@@ -91,7 +93,7 @@ func NewOpenAPIv3(cfg *Config, logger log.Logger) *openapi3.T {
 				}),
 		},
 	}
-	spec.Components.Responses = openapi3.Responses{
+	spec.Components.Responses = openapi3.ResponseBodies{
 		"ListRecordsResponse": &openapi3.ResponseRef{
 			Value: openapi3.NewResponse().
 				WithDescription("Response returns back all records.").
@@ -115,54 +117,55 @@ func NewOpenAPIv3(cfg *Config, logger log.Logger) *openapi3.T {
 				}),
 		},
 	}
-	spec.Paths = openapi3.Paths{
-		"/records": &openapi3.PathItem{
+
+	spec.Paths = openapi3.NewPaths(
+		openapi3.WithPath("/records", &openapi3.PathItem{
 			Get: &openapi3.Operation{
 				OperationID: "ListRecords",
-				Responses: openapi3.Responses{
-					"200": &openapi3.ResponseRef{
+				Responses: openapi3.NewResponses(
+					openapi3.WithStatus(200, &openapi3.ResponseRef{
 						Ref: "#/components/responses/ListRecordsResponse",
-					},
-					"500": &openapi3.ResponseRef{
+					}),
+					openapi3.WithStatus(500, &openapi3.ResponseRef{
 						Ref: "#/components/responses/ErrorResponse",
-					},
-				},
+					}),
+				),
 			},
 			Post: &openapi3.Operation{
 				OperationID: "CreateRecord",
 				RequestBody: &openapi3.RequestBodyRef{
 					Ref: "#/components/requestBodies/CreateRecordRequest",
 				},
-				Responses: openapi3.Responses{
-					"201": &openapi3.ResponseRef{
+				Responses: openapi3.NewResponses(
+					openapi3.WithStatus(201, &openapi3.ResponseRef{
 						Ref: "#/components/responses/RecordResponse",
-					},
-					"400": &openapi3.ResponseRef{
+					}),
+					openapi3.WithStatus(400, &openapi3.ResponseRef{
 						Ref: "#/components/responses/ErrorResponse",
-					},
-					"500": &openapi3.ResponseRef{
+					}),
+					openapi3.WithStatus(500, &openapi3.ResponseRef{
 						Ref: "#/components/responses/ErrorResponse",
-					},
-				},
+					}),
+				),
 			},
-		},
-		"/records/{" + IDPPN + "}": &openapi3.PathItem{
+		}),
+		openapi3.WithPath(fmt.Sprintf("/records/{%s}", IDPPN), &openapi3.PathItem{
 			Get: &openapi3.Operation{
 				OperationID: "GetRecord",
 				Parameters: []*openapi3.ParameterRef{{
 					Ref: "#/components/parameters/IDPPN",
 				}},
-				Responses: openapi3.Responses{
-					"200": &openapi3.ResponseRef{
+				Responses: openapi3.NewResponses(
+					openapi3.WithStatus(200, &openapi3.ResponseRef{
 						Ref: "#/components/responses/RecordResponse",
-					},
-					"400": &openapi3.ResponseRef{
+					}),
+					openapi3.WithStatus(400, &openapi3.ResponseRef{
 						Ref: "#/components/responses/ErrorResponse",
-					},
-					"500": &openapi3.ResponseRef{
+					}),
+					openapi3.WithStatus(500, &openapi3.ResponseRef{
 						Ref: "#/components/responses/ErrorResponse",
-					},
-				},
+					}),
+				),
 			},
 			Put: &openapi3.Operation{
 				OperationID: "UpdateRecord",
@@ -172,36 +175,37 @@ func NewOpenAPIv3(cfg *Config, logger log.Logger) *openapi3.T {
 				RequestBody: &openapi3.RequestBodyRef{
 					Ref: "#/components/requestBodies/UpdateRecordRequest",
 				},
-				Responses: openapi3.Responses{
-					"202": &openapi3.ResponseRef{
+				Responses: openapi3.NewResponses(
+					openapi3.WithStatus(202, &openapi3.ResponseRef{
 						Ref: "#/components/responses/RecordResponse",
-					},
-					"400": &openapi3.ResponseRef{
+					}),
+					openapi3.WithStatus(400, &openapi3.ResponseRef{
 						Ref: "#/components/responses/ErrorResponse",
-					},
-					"500": &openapi3.ResponseRef{
+					}),
+					openapi3.WithStatus(500, &openapi3.ResponseRef{
 						Ref: "#/components/responses/ErrorResponse",
-					},
-				},
+					}),
+				),
 			},
 			Delete: &openapi3.Operation{
 				OperationID: "DeleteRecord",
 				Parameters: []*openapi3.ParameterRef{{
 					Ref: "#/components/parameters/IDPPN",
 				}},
-				Responses: openapi3.Responses{
-					"200": &openapi3.ResponseRef{
+				Responses: openapi3.NewResponses(
+					openapi3.WithStatus(200, &openapi3.ResponseRef{
 						Value: openapi3.NewResponse().WithDescription("Record deleted"),
-					},
-					"400": &openapi3.ResponseRef{
+					}),
+					openapi3.WithStatus(400, &openapi3.ResponseRef{
 						Ref: "#/components/responses/ErrorResponse",
-					},
-					"500": &openapi3.ResponseRef{
+					}),
+					openapi3.WithStatus(500, &openapi3.ResponseRef{
 						Ref: "#/components/responses/ErrorResponse",
-					},
-				},
+					}),
+				),
 			},
-		},
-	}
-	return spec
+		}),
+	)
+
+	return &spec
 }
