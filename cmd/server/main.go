@@ -15,38 +15,38 @@ import (
 	"github.com/okutsen/PasswordManager/internal/repo"
 )
 
-// TODO: password tips or reset questions
-
 func main() {
 	logger := log.New()
-	cfg, err := config.New()
+	config, err := config.New()
 	if err != nil {
 		logger.Fatalf("failed to initialize config: %s", err.Error())
 	}
 
 	db, err := repo.New(&repo.Config{
-		Host:     cfg.DB.Host,
-		Port:     cfg.DB.Port,
-		DBName:   cfg.DB.DBName,
-		Username: cfg.DB.Username,
-		SSLMode:  cfg.DB.SSLMode,
-		Password: cfg.DB.Password,
+		Host:     config.DB.Host,
+		Port:     config.DB.Port,
+		DBName:   config.DB.DBName,
+		Username: config.DB.Username,
+		SSLMode:  config.DB.SSLMode,
+		Password: config.DB.Password,
 	})
 	if err != nil {
 		logger.Fatalf("failed to initialize DB: %s", err.Error())
 	}
-	logger.Info("DB is started")
+	logger.Info("DB connected")
 
 	ctrl := controller.New(logger, db)
 
-	serviceAPI := api.New(&api.Config{Port: cfg.API.Port}, ctrl, logger)
+	serviceAPI := api.New(&api.Config{Port: config.API.Port}, ctrl, logger)
 
 	go func() {
 		err = serviceAPI.Start()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Errorf("failed to start application %s", err.Error())
+			logger.Errorf("failed to start server %s", err.Error())
 			return
 		}
+
+		logger.Infof("Server started, listening on %s", config.API.Port)
 	}()
 
 	osSignals := make(chan os.Signal, 1)
@@ -60,7 +60,7 @@ func main() {
 		logger.Warnf("failed to close DB: %s", err.Error())
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.API.ShutdownTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), config.API.ShutdownTimeout)
 	defer cancel()
 
 	err = serviceAPI.Stop(ctx)

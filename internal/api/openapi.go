@@ -51,8 +51,10 @@ func NewOpenAPIv3(cfg *Config, logger log.Logger) *openapi3.T {
 				URL:         "http://" + cfg.LocalAddress(),
 			},
 		},
+		Components: &openapi3.Components{
+			Schemas: generateSchemas(logger),
+		},
 	}
-	spec.Components.Schemas = generateSchemas(logger)
 	spec.Components.SecuritySchemes = openapi3.SecuritySchemes{
 		"AuthorizationToken": &openapi3.SecuritySchemeRef{
 			Value: openapi3.NewJWTSecurityScheme(),

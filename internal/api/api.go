@@ -68,7 +68,6 @@ func New(config *Config, controller Controller, logger log.Logger) *API {
 }
 
 func (api *API) Start() error {
-	api.ctx.logger.Info("API started")
 	router := httprouter.New()
 	api.SetFunctionalEndpoints(router)
 	api.SetRecordEndpoints(router)
@@ -156,7 +155,6 @@ func NewYAMLSpecHandler(parentLogger log.Logger, spec *openapi3.T) http.HandlerF
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
 	}
 }
 

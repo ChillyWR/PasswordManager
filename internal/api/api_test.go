@@ -50,7 +50,7 @@ func setup() *APIContext {
 	if err != nil {
 		logger.Fatalf("failed to initialize DB: %v", err)
 	}
-	logger.Info("DB is started")
+	logger.Info("DB connected")
 
 	ctrl := controller.New(logger, db)
 	return &APIContext{ctrl, logger}

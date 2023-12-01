@@ -1,13 +1,13 @@
 NAME=PasswordManager
-PORT=10000
+PORT=5000
 DOCKER_NAME=password_manager
 MAIN_PATH=./cmd/server/main.go
-TARGET_PATH=$(GOPATH)/bin
+TARGET_PATH=./bin
 TARGET=${TARGET_PATH}/${NAME}
 DB_CONNECTION=postgresql://admin:12345@localhost:5432/password_manager?sslmode=disable
-MIGRATIONS_PATH=./migrations
+MIGRATIONS_PATH=./internal/repo/migrations
 .DEFAULT_GOAL := help
-export PM_PORT=${PORT}
+export PM_SERVER_PORT=${PORT}
 
 dependencies: ## Update dependencies
 	go mod vendor

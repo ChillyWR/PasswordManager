@@ -1,11 +1,18 @@
-version: "3.9"
-
 services:
   password_manager:
     build: .
     image: password_manager
     ports:
-      - "8080:10000"
+      - "${PM_SERVER_PORT}:${PM_SERVER_PORT}"
+    environment:
+      PM_SERVER_PORT: ${PM_SERVER_PORT}
+      PM_SERVER_SHUTDOWN_TIMEOUT: ${PM_SERVER_SHUTDOWN_TIMEOUT}
+      PM_DB_HOST: postgres
+      PM_DB_PORT: ${PM_DB_PORT}
+      PM_DB_NAME: ${PM_DB_NAME}
+      PM_DB_USERNAME: ${PM_DB_USERNAME}
+      PM_DB_PASSWORD: ${PM_DB_PASSWORD}
+      PM_DB_SSL_MODE: ${PM_DB_SSL_MODE}
     restart: always
     depends_on:
       postgres:
@@ -15,31 +22,31 @@ services:
       - db_network
 
   postgres:
-    image: postgres
+    image: postgres:16
     healthcheck:
-      test: [ "CMD", "pg_isready" ]
+      test: ["CMD", "pg_isready"]
       interval: 5s
       timeout: 5s
       retries: 10
     restart: always
     environment:
-      - POSTGRES_PASSWORD=12345
-      - POSTGRES_USER=admin
-      - POSTGRES_DB=password_manager
+      POSTGRES_DB: ${PM_DB_NAME}
+      POSTGRES_USER: ${PM_DB_USERNAME}
+      POSTGRES_PASSWORD: ${PM_DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${PM_DB_PORT}:${PM_DB_PORT}"
     container_name: postgres
     networks:
       - db_network
 
   migrations:
-    image: migrate/migrate
+    image: migrate/migrate:4
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
-      - ./migrations:/migrations
-    command: -path /migrations -database postgres://admin:12345@postgres:5432/password_manager?sslmode=disable up
+      - ./internal/repo/migrations:/migrations
+    command: -path /migrations -database postgres://${PM_DB_USERNAME}:${PM_DB_PASSWORD}@postgres:${PM_DB_PORT}/${PM_DB_NAME}?sslmode=${PM_DB_SSL_MODE} up
     networks:
       - db_network
 
