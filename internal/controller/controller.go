@@ -1,6 +1,9 @@
 package controller
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/google/uuid"
 
 	"github.com/okutsen/PasswordManager/internal/log"
@@ -9,34 +12,46 @@ import (
 	"github.com/okutsen/PasswordManager/model/db"
 )
 
-type Repository interface {
-	AllRecords() ([]db.Record, error)
-	RecordByID(id uuid.UUID) (*db.Record, error)
-	CreateRecord(record *db.Record) (*db.Record, error)
-	UpdateRecord(record *db.Record) (*db.Record, error)
-	DeleteRecord(id uuid.UUID) (*db.Record, error)
+type CredentialRecordRepository interface {
+	GetAll() ([]db.CredentialRecord, error)
+	Get(id uuid.UUID) (*db.CredentialRecord, error)
+	Create(record *db.CredentialRecord) (*db.CredentialRecord, error)
+	Update(record *db.CredentialRecord) (*db.CredentialRecord, error)
+	Delete(id uuid.UUID) (*db.CredentialRecord, error)
+}
 
-	AllUsers() ([]db.User, error)
-	UserByID(id uuid.UUID) (*db.User, error)
-	CreateUser(user *db.User) (*db.User, error)
-	UpdateUser(user *db.User) (*db.User, error)
-	DeleteUser(id uuid.UUID) (*db.User, error)
+type UserRepository interface {
+	GetAll() ([]db.User, error)
+	Get(id uuid.UUID) (*db.User, error)
+	Create(user *db.User) (*db.User, error)
+	Update(user *db.User) (*db.User, error)
+	Delete(id uuid.UUID) (*db.User, error)
 }
 
 type Controller struct {
-	repo Repository
-	log  log.Logger
+	userRepo         UserRepository
+	credentialRecord CredentialRecordRepository
+	log              log.Logger
 }
 
-func New(logger log.Logger, ctrl Repository) *Controller {
-	return &Controller{
-		log:  logger.WithFields(log.Fields{"service": "Controller"}),
-		repo: ctrl,
+func New(logger log.Logger, userRepo UserRepository, credentialRecord CredentialRecordRepository) (*Controller, error) {
+	if userRepo == nil {
+		return nil, errors.New("userRepo is nil")
 	}
+
+	if credentialRecord == nil {
+		return nil, errors.New("credentialRecord is nil")
+	}
+	
+	return &Controller{
+		log:              logger.WithFields(log.Fields{"service": "Controller"}),
+		userRepo:         userRepo,
+		credentialRecord: credentialRecord,
+	}, nil
 }
 
-func (c *Controller) AllRecords() ([]controller.Record, error) {
-	getDBRecords, err := c.repo.AllRecords()
+func (c *Controller) AllRecords() ([]controller.CredentialRecord, error) {
+	getDBRecords, err := c.credentialRecord.GetAll()
 	if err != nil {
 		return nil, err
 	}
@@ -45,22 +60,24 @@ func (c *Controller) AllRecords() ([]controller.Record, error) {
 	return records, nil
 }
 
-func (c *Controller) Record(id uuid.UUID) (*controller.Record, error) {
-	getRecord, err := c.repo.RecordByID(id)
+func (c *Controller) CredentialRecord(id uuid.UUID) (*controller.CredentialRecord, error) {
+	repoRecord, err := c.credentialRecord.Get(id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get by id: %w", err)
 	}
 
-	decPassword, err := Decrypt(getRecord.Password, Salt)
-	getRecord.Password = decPassword
+	decPassword, err := Decrypt(repoRecord.Password, Salt)
+	if err != nil {
+		return nil, fmt.Errorf("decrypt: %w", err)
+	}
 
-	record := builder.BuildControllerRecordFromDBRecord(getRecord)
+	repoRecord.Password = decPassword
+
+	record := builder.BuildControllerRecordFromDBRecord(repoRecord)
 	return &record, nil
 }
 
-// TODO: return specific errors to identify on api 404 Not found, 409 Conflict(if exists)
-
-func (c *Controller) CreateRecord(record *controller.Record) (*controller.Record, error) {
+func (c *Controller) CreateRecord(record *controller.CredentialRecord) (*controller.CredentialRecord, error) {
 	encPassword, err := Encrypt(record.Password, Salt)
 	if err != nil {
 		return nil, err
@@ -69,7 +86,7 @@ func (c *Controller) CreateRecord(record *controller.Record) (*controller.Record
 	record.Password = encPassword
 
 	dbRecord := builder.BuildDBRecordFromControllerRecord(record)
-	createRecord, err := c.repo.CreateRecord(&dbRecord)
+	createRecord, err := c.credentialRecord.Create(&dbRecord)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +104,7 @@ func (c *Controller) CreateRecord(record *controller.Record) (*controller.Record
 
 // 200, 204(if no changes?), 404
 
-func (c *Controller) UpdateRecord(id uuid.UUID, record *controller.Record) (*controller.Record, error) {
+func (c *Controller) UpdateRecord(id uuid.UUID, record *controller.CredentialRecord) (*controller.CredentialRecord, error) {
 	encPassword, err := Encrypt(record.Password, Salt)
 	if err != nil {
 		return nil, err
@@ -98,7 +115,7 @@ func (c *Controller) UpdateRecord(id uuid.UUID, record *controller.Record) (*con
 	dbRecord := builder.BuildDBRecordFromControllerRecord(record)
 	dbRecord.ID = id
 
-	updateRecord, err := c.repo.UpdateRecord(&dbRecord)
+	updateRecord, err := c.credentialRecord.Update(&dbRecord)
 	if err != nil {
 		return nil, err
 	}
@@ -114,10 +131,8 @@ func (c *Controller) UpdateRecord(id uuid.UUID, record *controller.Record) (*con
 	return &updatedRecord, nil
 }
 
-// 200, 404
-
-func (c *Controller) DeleteRecord(id uuid.UUID) (*controller.Record, error) {
-	dbRecord, err := c.repo.DeleteRecord(id)
+func (c *Controller) DeleteRecord(id uuid.UUID) (*controller.CredentialRecord, error) {
+	dbRecord, err := c.credentialRecord.Delete(id)
 	if err != nil {
 		return nil, err
 	}
@@ -128,29 +143,31 @@ func (c *Controller) DeleteRecord(id uuid.UUID) (*controller.Record, error) {
 }
 
 func (c *Controller) AllUsers() ([]controller.User, error) {
-	getUsers, err := c.repo.AllUsers()
+	repoUsers, err := c.userRepo.GetAll()
 	if err != nil {
 		return nil, err
 	}
 
-	users := builder.BuildControllerUsersFromDBUsers(getUsers)
+	users := builder.BuildControllerUsersFromRepoUsers(repoUsers)
 	return users, nil
 }
 
 func (c *Controller) User(id uuid.UUID) (*controller.User, error) {
-	getUser, err := c.repo.UserByID(id) // TODO: pass uuid
+	repoUser, err := c.userRepo.Get(id)
 	if err != nil {
 		return nil, err
 	}
 
-	decPassword, err := Decrypt(getUser.Password, Salt)
-	getUser.Password = decPassword
+	decPassword, err := Decrypt(repoUser.Password, Salt)
+	if err != nil {
+		return nil, err
+	}
 
-	user := builder.BuildControllerUserFromDBUser(getUser)
+	repoUser.Password = decPassword
+
+	user := builder.BuildControllerUserFromRepoUser(repoUser)
 	return &user, nil
 }
-
-// TODO: return specific errors to identify on api 404 Not found, 409 Conflict(if exists)
 
 func (c *Controller) CreateUser(user *controller.User) (*controller.User, error) {
 	encPassword, err := Encrypt(user.Password, Salt)
@@ -161,7 +178,7 @@ func (c *Controller) CreateUser(user *controller.User) (*controller.User, error)
 	user.Password = encPassword
 
 	dbUser := builder.BuildDBUserFromControllerUser(user)
-	createdDBUser, err := c.repo.CreateUser(&dbUser)
+	createdDBUser, err := c.userRepo.Create(&dbUser)
 	if err != nil {
 		return nil, err
 	}
@@ -173,11 +190,9 @@ func (c *Controller) CreateUser(user *controller.User) (*controller.User, error)
 
 	createdDBUser.Password = decPassword
 
-	createdUser := builder.BuildControllerUserFromDBUser(createdDBUser)
+	createdUser := builder.BuildControllerUserFromRepoUser(createdDBUser)
 	return &createdUser, nil
 }
-
-// 200, 204(if no changes?), 404
 
 func (c *Controller) UpdateUser(id uuid.UUID, user *controller.User) (*controller.User, error) {
 	encPassword, err := Encrypt(user.Password, Salt)
@@ -190,7 +205,7 @@ func (c *Controller) UpdateUser(id uuid.UUID, user *controller.User) (*controlle
 	dbUser := builder.BuildDBUserFromControllerUser(user)
 	dbUser.ID = id
 
-	updateUser, err := c.repo.UpdateUser(&dbUser)
+	updateUser, err := c.userRepo.Update(&dbUser)
 	if err != nil {
 		return nil, err
 	}
@@ -202,19 +217,17 @@ func (c *Controller) UpdateUser(id uuid.UUID, user *controller.User) (*controlle
 
 	updateUser.Password = decPassword
 
-	updatedUser := builder.BuildControllerUserFromDBUser(updateUser)
+	updatedUser := builder.BuildControllerUserFromRepoUser(updateUser)
 	return &updatedUser, nil
 }
 
-// 200, 404
-
 func (c *Controller) DeleteUser(id uuid.UUID) (*controller.User, error) {
-	dbUser, err := c.repo.DeleteUser(id)
+	dbUser, err := c.userRepo.Delete(id)
 	if err != nil {
 		return nil, err
 	}
 
-	user := builder.BuildControllerUserFromDBUser(dbUser)
+	user := builder.BuildControllerUserFromRepoUser(dbUser)
 
 	return &user, nil
 }

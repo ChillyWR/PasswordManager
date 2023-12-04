@@ -6,8 +6,8 @@ import (
 	"github.com/okutsen/PasswordManager/model/db"
 )
 
-func BuildControllerRecordFromDBRecord(record *db.Record) controller.Record {
-	return controller.Record{
+func BuildControllerRecordFromDBRecord(record *db.CredentialRecord) controller.CredentialRecord {
+	return controller.CredentialRecord{
 		ID:          record.ID,
 		Name:        record.Name,
 		Login:       record.Login,
@@ -21,8 +21,8 @@ func BuildControllerRecordFromDBRecord(record *db.Record) controller.Record {
 	}
 }
 
-func BuildControllerRecordsFromDBRecords(records []db.Record) []controller.Record {
-	recordsController := make([]controller.Record, len(records))
+func BuildControllerRecordsFromDBRecords(records []db.CredentialRecord) []controller.CredentialRecord {
+	recordsController := make([]controller.CredentialRecord, len(records))
 	for i, v := range records {
 		recordsController[i] = BuildControllerRecordFromDBRecord(&v)
 	}
@@ -30,8 +30,8 @@ func BuildControllerRecordsFromDBRecords(records []db.Record) []controller.Recor
 	return recordsController
 }
 
-func BuildAPIRecordFromControllerRecord(record *controller.Record) api.Record {
-	return api.Record{
+func BuildAPIRecordFromControllerRecord(record *controller.CredentialRecord) api.CredentialRecord {
+	return api.CredentialRecord{
 		ID:          record.ID,
 		Name:        record.Name,
 		Login:       record.Login,
@@ -45,8 +45,8 @@ func BuildAPIRecordFromControllerRecord(record *controller.Record) api.Record {
 	}
 }
 
-func BuildAPIRecordsFromControllerRecords(records []controller.Record) []api.Record {
-	recordsController := make([]api.Record, len(records))
+func BuildAPIRecordsFromControllerRecords(records []controller.CredentialRecord) []api.CredentialRecord {
+	recordsController := make([]api.CredentialRecord, len(records))
 	for i, v := range records {
 		recordsController[i] = BuildAPIRecordFromControllerRecord(&v)
 	}
@@ -54,8 +54,8 @@ func BuildAPIRecordsFromControllerRecords(records []controller.Record) []api.Rec
 	return recordsController
 }
 
-func BuildControllerRecordFromAPIRecord(record *api.Record) controller.Record {
-	return controller.Record{
+func BuildControllerRecordFromAPIRecord(record *api.CredentialRecord) controller.CredentialRecord {
+	return controller.CredentialRecord{
 		ID:          record.ID,
 		Name:        record.Name,
 		Login:       record.Login,
@@ -69,8 +69,8 @@ func BuildControllerRecordFromAPIRecord(record *api.Record) controller.Record {
 	}
 }
 
-func BuildDBRecordFromControllerRecord(record *controller.Record) db.Record {
-	return db.Record{
+func BuildDBRecordFromControllerRecord(record *controller.CredentialRecord) db.CredentialRecord {
+	return db.CredentialRecord{
 		ID:          record.ID,
 		Name:        record.Name,
 		Login:       record.Login,

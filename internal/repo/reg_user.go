@@ -1,15 +1,29 @@
 package repo
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	"github.com/okutsen/PasswordManager/model/db"
 )
 
-func (r *Repo) AllUsers() ([]db.User, error) {
+func NewUserRepository(db *gorm.DB) (*UserRepository, error) {
+	if db == nil {
+		return nil, errors.New("db is nil")
+	}
+
+	return &UserRepository{db: db}, nil
+}
+
+type UserRepository struct {
+	db *gorm.DB
+}
+
+func (r *UserRepository) GetAll() ([]db.User, error) {
 	var user []db.User
 	result := r.db.Find(&user)
 	err := result.Error
@@ -19,7 +33,7 @@ func (r *Repo) AllUsers() ([]db.User, error) {
 
 	return user, nil
 }
-func (r *Repo) UserByID(id uuid.UUID) (*db.User, error) {
+func (r *UserRepository) Get(id uuid.UUID) (*db.User, error) {
 	var user db.User
 	result := r.db.First(&user, id)
 	err := result.Error
@@ -30,7 +44,7 @@ func (r *Repo) UserByID(id uuid.UUID) (*db.User, error) {
 	return &user, nil
 }
 
-func (r *Repo) CreateUser(user *db.User) (*db.User, error) {
+func (r *UserRepository) Create(user *db.User) (*db.User, error) {
 	user.ID = uuid.New()
 	result := r.db.Create(user)
 	err := result.Error
@@ -41,7 +55,7 @@ func (r *Repo) CreateUser(user *db.User) (*db.User, error) {
 	return user, nil
 }
 
-func (r *Repo) UpdateUser(user *db.User) (*db.User, error) {
+func (r *UserRepository) Update(user *db.User) (*db.User, error) {
 	result := r.db.Model(user).Clauses(clause.Returning{}).Updates(user)
 	err := result.Error
 	if err != nil {
@@ -51,7 +65,7 @@ func (r *Repo) UpdateUser(user *db.User) (*db.User, error) {
 	return user, nil
 }
 
-func (r *Repo) DeleteUser(id uuid.UUID) (*db.User, error) {
+func (r *UserRepository) Delete(id uuid.UUID) (*db.User, error) {
 	var user db.User
 	result := r.db.Model(&user).Clauses(clause.Returning{}).Delete(&user, id)
 	err := result.Error

@@ -17,7 +17,7 @@ type User struct {
 	UpdatedAt time.Time
 }
 
-type Record struct {
+type CredentialRecord struct {
 	ID          uuid.UUID
 	Name        string
 	Login       string

@@ -6,7 +6,7 @@ import (
 	"github.com/okutsen/PasswordManager/model/db"
 )
 
-func BuildControllerUserFromDBUser(user *db.User) controller.User {
+func BuildControllerUserFromRepoUser(user *db.User) controller.User {
 	return controller.User{
 		ID:        user.ID,
 		Name:      user.Name,
@@ -19,10 +19,10 @@ func BuildControllerUserFromDBUser(user *db.User) controller.User {
 	}
 }
 
-func BuildControllerUsersFromDBUsers(users []db.User) []controller.User {
+func BuildControllerUsersFromRepoUsers(users []db.User) []controller.User {
 	usersController := make([]controller.User, len(users))
 	for i, v := range users {
-		usersController[i] = BuildControllerUserFromDBUser(&v)
+		usersController[i] = BuildControllerUserFromRepoUser(&v)
 	}
 
 	return usersController

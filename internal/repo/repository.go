@@ -5,24 +5,20 @@ import (
 	"gorm.io/gorm"
 )
 
-type Repo struct {
-	db *gorm.DB
-}
-
-func New(cfg *Config) (*Repo, error) {
+func OpenConnection(cfg *Config) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(cfg.Address()), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
-	return &Repo{
-		db: db,
-	}, err
+
+	return db, err
 }
 
-func (r *Repo) Close() error {
-	db, err := r.db.DB()
+func CloseConnection(db *gorm.DB) error {
+	_db, err := db.DB()
 	if err != nil {
 		return err
 	}
-	return db.Close()
+
+	return _db.Close()
 }

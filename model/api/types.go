@@ -9,7 +9,7 @@ import (
 const (
 	InvalidJSONMessage     = "Invalid JSON"
 	InvalidRecordIDMessage = "Invalid record ID"
-	InvalidUserIDMessage = "Invalid user ID"
+	InvalidUserIDMessage   = "Invalid user ID"
 	InternalErrorMessage   = "Oops, something went wrong"
 	UnAuthorizedMessage    = "Sign in to use service"
 )
@@ -25,7 +25,7 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type Record struct {
+type CredentialRecord struct {
 	ID          uuid.UUID `json:"id"`
 	Name        string    `json:"name"`
 	Login       string    `json:"login"`

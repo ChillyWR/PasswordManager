@@ -13,9 +13,9 @@ import (
 func generateSchemas(logger log.Logger) openapi3.Schemas {
 	schemas := make(openapi3.Schemas)
 	gen := openapi3gen.NewGenerator()
-	RecordRef, err := gen.NewSchemaRefForValue(&api.Record{}, schemas)
+	CredentialRecordRef, err := gen.NewSchemaRefForValue(&api.CredentialRecord{}, schemas)
 	if err != nil {
-		logger.Fatal("Failed to generate schema from Record")
+		logger.Fatal("Failed to generate schema from CredentialRecord")
 	}
 	UserRef, err := gen.NewSchemaRefForValue(&api.User{}, schemas)
 	if err != nil {
@@ -26,9 +26,9 @@ func generateSchemas(logger log.Logger) openapi3.Schemas {
 		logger.Fatal("Failed to generate schema from Error")
 	}
 	resultSchema := openapi3.Schemas{
-		"Record": RecordRef,
-		"User":   UserRef,
-		"Error":  ErrorRef,
+		"CredentialRecord": CredentialRecordRef,
+		"User":             UserRef,
+		"Error":            ErrorRef,
 	}
 	return resultSchema
 }

@@ -26,11 +26,11 @@ const (
 )
 
 type Controller interface {
-	AllRecords() ([]controller.Record, error)
-	Record(id uuid.UUID) (*controller.Record, error)
-	CreateRecord(record *controller.Record) (*controller.Record, error)
-	UpdateRecord(id uuid.UUID, record *controller.Record) (*controller.Record, error)
-	DeleteRecord(id uuid.UUID) (*controller.Record, error)
+	AllRecords() ([]controller.CredentialRecord, error)
+	CredentialRecord(id uuid.UUID) (*controller.CredentialRecord, error)
+	CreateRecord(record *controller.CredentialRecord) (*controller.CredentialRecord, error)
+	UpdateRecord(id uuid.UUID, record *controller.CredentialRecord) (*controller.CredentialRecord, error)
+	DeleteRecord(id uuid.UUID) (*controller.CredentialRecord, error)
 
 	AllUsers() ([]controller.User, error)
 	User(id uuid.UUID) (*controller.User, error)

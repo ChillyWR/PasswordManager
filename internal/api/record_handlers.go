@@ -46,7 +46,7 @@ func NewGetRecordHandler(apictx *APIContext) http.HandlerFunc {
 				api.Error{Message: api.InvalidRecordIDMessage}, http.StatusBadRequest, logger)
 			return
 		}
-		record, err := apictx.ctrl.Record(recordID)
+		record, err := apictx.ctrl.CredentialRecord(recordID)
 		if err != nil {
 			logger.Warnf("Failed to get records from controller: %s", err.Error())
 			writeResponse(w,
@@ -67,7 +67,7 @@ func NewCreateRecordHandler(apictx *APIContext) http.HandlerFunc {
 		logger = logger.WithFields(log.Fields{
 			"cor_id": rctx.corID.String(),
 		})
-		var recordAPI *api.Record
+		var recordAPI *api.CredentialRecord
 		err := readJSON(r.Body, &recordAPI)
 		defer r.Body.Close()
 		if err != nil {
@@ -106,7 +106,7 @@ func NewUpdateRecordHandler(apictx *APIContext) http.HandlerFunc {
 				api.Error{Message: api.InvalidRecordIDMessage}, http.StatusBadRequest, logger)
 			return
 		}
-		var recordAPI *api.Record
+		var recordAPI *api.CredentialRecord
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			logger.Warnf("Failed to read JSON: %s", err.Error())
