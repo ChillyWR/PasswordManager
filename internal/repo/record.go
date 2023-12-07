@@ -8,23 +8,23 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/okutsen/PasswordManager/model/db"
+	"github.com/okutsen/PasswordManager/model"
 )
 
-func NewCredentialRecordRepository(db *gorm.DB) (*CredentialRecordRepository, error) {
+func NewRecordRepository(db *gorm.DB) (*RecordRepository, error) {
 	if db == nil {
 		return nil, errors.New("db is nil")
 	}
-	
-	return &CredentialRecordRepository{db: db}, nil
+
+	return &RecordRepository{db: db}, nil
 }
 
-type CredentialRecordRepository struct {
+type RecordRepository struct {
 	db *gorm.DB
 }
 
-func (r *CredentialRecordRepository) GetAll() ([]db.CredentialRecord, error) {
-	var records []db.CredentialRecord
+func (r *RecordRepository) GetAll() ([]model.CredentialRecord, error) {
+	var records []model.CredentialRecord
 	result := r.db.Find(&records)
 	err := result.Error
 	if err != nil {
@@ -33,8 +33,8 @@ func (r *CredentialRecordRepository) GetAll() ([]db.CredentialRecord, error) {
 
 	return records, nil
 }
-func (r *CredentialRecordRepository) Get(id uuid.UUID) (*db.CredentialRecord, error) {
-	var record db.CredentialRecord
+func (r *RecordRepository) Get(id uuid.UUID) (*model.CredentialRecord, error) {
+	var record model.CredentialRecord
 	result := r.db.First(&record, id)
 	err := result.Error
 	if err != nil {
@@ -44,7 +44,7 @@ func (r *CredentialRecordRepository) Get(id uuid.UUID) (*db.CredentialRecord, er
 	return &record, nil
 }
 
-func (r *CredentialRecordRepository) Create(record *db.CredentialRecord) (*db.CredentialRecord, error) {
+func (r *RecordRepository) Create(record *model.CredentialRecord) (*model.CredentialRecord, error) {
 	record.ID = uuid.New()
 	result := r.db.Create(record)
 	err := result.Error
@@ -55,7 +55,8 @@ func (r *CredentialRecordRepository) Create(record *db.CredentialRecord) (*db.Cr
 	return record, nil
 }
 
-func (r *CredentialRecordRepository) Update(record *db.CredentialRecord) (*db.CredentialRecord, error) {
+func (r *RecordRepository) Update(record *model.CredentialRecord) (*model.CredentialRecord, error) {
+	// TODO: validate updates
 	result := r.db.Model(record).Clauses(clause.Returning{}).Updates(record)
 	err := result.Error
 	if err != nil {
@@ -65,8 +66,8 @@ func (r *CredentialRecordRepository) Update(record *db.CredentialRecord) (*db.Cr
 	return record, nil
 }
 
-func (r *CredentialRecordRepository) Delete(id uuid.UUID) (*db.CredentialRecord, error) {
-	var record db.CredentialRecord
+func (r *RecordRepository) Delete(id uuid.UUID) (*model.CredentialRecord, error) {
+	var record model.CredentialRecord
 	result := r.db.Model(&record).Clauses(clause.Returning{}).Delete(&record, id)
 	err := result.Error
 	if err != nil {

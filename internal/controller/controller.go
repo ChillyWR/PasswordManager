@@ -3,156 +3,127 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/okutsen/PasswordManager/internal/log"
-	"github.com/okutsen/PasswordManager/model/builder"
-	"github.com/okutsen/PasswordManager/model/controller"
-	"github.com/okutsen/PasswordManager/model/db"
+	"github.com/okutsen/PasswordManager/model"
+	"github.com/okutsen/PasswordManager/pkg/pmerror"
 )
 
-type CredentialRecordRepository interface {
-	GetAll() ([]db.CredentialRecord, error)
-	Get(id uuid.UUID) (*db.CredentialRecord, error)
-	Create(record *db.CredentialRecord) (*db.CredentialRecord, error)
-	Update(record *db.CredentialRecord) (*db.CredentialRecord, error)
-	Delete(id uuid.UUID) (*db.CredentialRecord, error)
+type RecordRepository interface {
+	GetAll() ([]model.CredentialRecord, error)
+	Get(id uuid.UUID) (*model.CredentialRecord, error)
+	Create(record *model.CredentialRecord) (*model.CredentialRecord, error)
+	Update(record *model.CredentialRecord) (*model.CredentialRecord, error)
+	Delete(id uuid.UUID) (*model.CredentialRecord, error)
 }
 
 type UserRepository interface {
-	GetAll() ([]db.User, error)
-	Get(id uuid.UUID) (*db.User, error)
-	Create(user *db.User) (*db.User, error)
-	Update(user *db.User) (*db.User, error)
-	Delete(id uuid.UUID) (*db.User, error)
+	GetAll() ([]model.User, error)
+	Get(id uuid.UUID) (*model.User, error)
+	Create(user *model.User) (*model.User, error)
+	Update(user *model.User) (*model.User, error)
+	Delete(id uuid.UUID) (*model.User, error)
 }
 
 type Controller struct {
-	userRepo         UserRepository
-	credentialRecord CredentialRecordRepository
-	log              log.Logger
+	userRepo   UserRepository
+	recordRepo RecordRepository
+	log        log.Logger
 }
 
-func New(logger log.Logger, userRepo UserRepository, credentialRecord CredentialRecordRepository) (*Controller, error) {
+func New(logger log.Logger, userRepo UserRepository, recordRepo RecordRepository) (*Controller, error) {
 	if userRepo == nil {
 		return nil, errors.New("userRepo is nil")
 	}
 
-	if credentialRecord == nil {
-		return nil, errors.New("credentialRecord is nil")
+	if recordRepo == nil {
+		return nil, errors.New("recordRepo is nil")
 	}
-	
+
 	return &Controller{
-		log:              logger.WithFields(log.Fields{"service": "Controller"}),
-		userRepo:         userRepo,
-		credentialRecord: credentialRecord,
+		log:        logger.WithFields(log.Fields{"service": "Controller"}),
+		userRepo:   userRepo,
+		recordRepo: recordRepo,
 	}, nil
 }
 
-func (c *Controller) AllRecords() ([]controller.CredentialRecord, error) {
-	getDBRecords, err := c.credentialRecord.GetAll()
-	if err != nil {
-		return nil, err
-	}
-	records := builder.BuildControllerRecordsFromDBRecords(getDBRecords)
-
-	return records, nil
+func (c *Controller) AllRecords() ([]model.CredentialRecord, error) {
+	return c.recordRepo.GetAll()
 }
 
-func (c *Controller) CredentialRecord(id uuid.UUID) (*controller.CredentialRecord, error) {
-	repoRecord, err := c.credentialRecord.Get(id)
+func (c *Controller) CredentialRecord(id uuid.UUID) (*model.CredentialRecord, error) {
+	record, err := c.recordRepo.Get(id)
 	if err != nil {
-		return nil, fmt.Errorf("get by id: %w", err)
+		return nil, fmt.Errorf("get: %w", err)
 	}
 
-	decPassword, err := Decrypt(repoRecord.Password, Salt)
+	decNotes, err := Decrypt(*record.Notes, Salt)
 	if err != nil {
 		return nil, fmt.Errorf("decrypt: %w", err)
 	}
 
-	repoRecord.Password = decPassword
+	record.Notes = &decNotes
 
-	record := builder.BuildControllerRecordFromDBRecord(repoRecord)
-	return &record, nil
+	return record, nil
 }
 
-func (c *Controller) CreateRecord(record *controller.CredentialRecord) (*controller.CredentialRecord, error) {
-	encPassword, err := Encrypt(record.Password, Salt)
+func (c *Controller) CreateRecord(form *model.CredentialRecordForm) (*model.CredentialRecord, error) {
+	if err := form.Validate(); err != nil {
+		return nil, fmt.Errorf("validate: %w", err)
+	}
+
+	encNotes, err := Encrypt(*form.Notes, Salt)
 	if err != nil {
 		return nil, err
 	}
 
-	record.Password = encPassword
-
-	dbRecord := builder.BuildDBRecordFromControllerRecord(record)
-	createRecord, err := c.credentialRecord.Create(&dbRecord)
-	if err != nil {
-		return nil, err
+	// TODO: fill user info
+	record := model.CredentialRecord{
+		Name:  *form.Name,
+		Notes: &encNotes,
 	}
 
-	decPassword, err := Decrypt(createRecord.Password, Salt)
-	if err != nil {
-		return nil, err
-	}
-
-	createRecord.Password = decPassword
-
-	createdRecord := builder.BuildControllerRecordFromDBRecord(createRecord)
-	return &createdRecord, nil
+	return c.recordRepo.Create(&record)
 }
 
-// 200, 204(if no changes?), 404
-
-func (c *Controller) UpdateRecord(id uuid.UUID, record *controller.CredentialRecord) (*controller.CredentialRecord, error) {
-	encPassword, err := Encrypt(record.Password, Salt)
-	if err != nil {
-		return nil, err
+func (c *Controller) UpdateRecord(id uuid.UUID, form *model.CredentialRecordForm) (*model.CredentialRecord, error) {
+	if form.Empty() {
+		return nil, fmt.Errorf("%w: empty form", pmerror.ErrInvalidInput)
 	}
 
-	record.Password = encPassword
-
-	dbRecord := builder.BuildDBRecordFromControllerRecord(record)
-	dbRecord.ID = id
-
-	updateRecord, err := c.credentialRecord.Update(&dbRecord)
-	if err != nil {
-		return nil, err
+	record := model.CredentialRecord{
+		ID:        id,
+		UpdatedOn: time.Now().UTC(),
+	}
+	// TODO: validate that if Name is nil repo wont update name to empty string
+	if form.Name != nil {
+		record.Name = *form.Name
 	}
 
-	decPassword, err := Decrypt(updateRecord.Password, Salt)
-	if err != nil {
-		return nil, err
+	if form.Notes != nil {
+		encNotes, err := Encrypt(*form.Notes, Salt)
+		if err != nil {
+			return nil, err
+		}
+
+		record.Notes = &encNotes
 	}
 
-	updateRecord.Password = decPassword
-
-	updatedRecord := builder.BuildControllerRecordFromDBRecord(updateRecord)
-	return &updatedRecord, nil
+	return c.recordRepo.Update(&record)
 }
 
-func (c *Controller) DeleteRecord(id uuid.UUID) (*controller.CredentialRecord, error) {
-	dbRecord, err := c.credentialRecord.Delete(id)
-	if err != nil {
-		return nil, err
-	}
-
-	record := builder.BuildControllerRecordFromDBRecord(dbRecord)
-
-	return &record, nil
+func (c *Controller) DeleteRecord(id uuid.UUID) (*model.CredentialRecord, error) {
+	return c.recordRepo.Delete(id)
 }
 
-func (c *Controller) AllUsers() ([]controller.User, error) {
-	repoUsers, err := c.userRepo.GetAll()
-	if err != nil {
-		return nil, err
-	}
-
-	users := builder.BuildControllerUsersFromRepoUsers(repoUsers)
-	return users, nil
+func (c *Controller) AllUsers() ([]model.User, error) {
+	return c.userRepo.GetAll()
 }
 
-func (c *Controller) User(id uuid.UUID) (*controller.User, error) {
+func (c *Controller) User(id uuid.UUID) (*model.User, error) {
 	repoUser, err := c.userRepo.Get(id)
 	if err != nil {
 		return nil, err
@@ -165,69 +136,63 @@ func (c *Controller) User(id uuid.UUID) (*controller.User, error) {
 
 	repoUser.Password = decPassword
 
-	user := builder.BuildControllerUserFromRepoUser(repoUser)
-	return &user, nil
+	return repoUser, nil
 }
 
-func (c *Controller) CreateUser(user *controller.User) (*controller.User, error) {
-	encPassword, err := Encrypt(user.Password, Salt)
+func (c *Controller) CreateUser(form *model.UserForm) (*model.User, error) {
+	if err := form.Validate(); err != nil {
+		return nil, fmt.Errorf("validate: %w", err)
+	}
+
+	encPassword, err := Encrypt(*form.Password, Salt)
 	if err != nil {
 		return nil, err
 	}
 
-	user.Password = encPassword
+	user := model.User{
+		Name:     *form.Name,
+		Password: encPassword,
+	}
 
-	dbUser := builder.BuildDBUserFromControllerUser(user)
-	createdDBUser, err := c.userRepo.Create(&dbUser)
+	result, err := c.userRepo.Create(&user)
 	if err != nil {
 		return nil, err
 	}
 
-	decPassword, err := Decrypt(createdDBUser.Password, Salt)
+	result.Password, err = Decrypt(result.Password, Salt)
 	if err != nil {
 		return nil, err
 	}
 
-	createdDBUser.Password = decPassword
-
-	createdUser := builder.BuildControllerUserFromRepoUser(createdDBUser)
-	return &createdUser, nil
+	return result, nil
 }
 
-func (c *Controller) UpdateUser(id uuid.UUID, user *controller.User) (*controller.User, error) {
-	encPassword, err := Encrypt(user.Password, Salt)
-	if err != nil {
-		return nil, err
+func (c *Controller) UpdateUser(id uuid.UUID, form *model.UserForm) (*model.User, error) {
+	if form.Empty() {
+		return nil, fmt.Errorf("%w: empty form", pmerror.ErrInvalidInput)
 	}
 
-	user.Password = encPassword
-
-	dbUser := builder.BuildDBUserFromControllerUser(user)
-	dbUser.ID = id
-
-	updateUser, err := c.userRepo.Update(&dbUser)
-	if err != nil {
-		return nil, err
+	user := model.User{
+		ID:        id,
+		UpdatedOn: time.Now().UTC(),
 	}
 
-	decPassword, err := Decrypt(updateUser.Password, Salt)
-	if err != nil {
-		return nil, err
+	if form.Name != nil {
+		user.Name = *form.Name
 	}
 
-	updateUser.Password = decPassword
+	if form.Password != nil {
+		encPassword, err := Encrypt(*form.Password, Salt)
+		if err != nil {
+			return nil, fmt.Errorf("encrypt: %w", err)
+		}
 
-	updatedUser := builder.BuildControllerUserFromRepoUser(updateUser)
-	return &updatedUser, nil
+		user.Password = encPassword
+	}
+
+	return c.userRepo.Update(&user)
 }
 
-func (c *Controller) DeleteUser(id uuid.UUID) (*controller.User, error) {
-	dbUser, err := c.userRepo.Delete(id)
-	if err != nil {
-		return nil, err
-	}
-
-	user := builder.BuildControllerUserFromRepoUser(dbUser)
-
-	return &user, nil
+func (c *Controller) DeleteUser(id uuid.UUID) (*model.User, error) {
+	return c.userRepo.Delete(id)
 }

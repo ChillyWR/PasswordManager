@@ -1,32 +1,30 @@
 package api
 
 import (
-	"encoding/json"
-	"io"
 	"net/http"
 
 	"github.com/okutsen/PasswordManager/internal/log"
-	"github.com/okutsen/PasswordManager/model/api"
-	"github.com/okutsen/PasswordManager/model/builder"
+	"github.com/okutsen/PasswordManager/model"
 )
 
 func NewListRecordsHandler(apictx *APIContext) http.HandlerFunc {
-	logger := apictx.logger.WithFields(log.Fields{"handler": "GetAllRecords"})
+	logger := apictx.logger.WithFields(log.Fields{
+		"handler": "ListRecords",
+	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		rctx := unpackRequestContext(r.Context(), logger)
 		logger = logger.WithFields(log.Fields{
 			"cor_id": rctx.corID.String(),
 		})
+
 		records, err := apictx.ctrl.AllRecords()
 		if err != nil {
-			logger.Warnf("Failed to get records from controller: %s", err.Error())
-			writeResponse(w,
-				api.Error{Message: api.InternalErrorMessage}, http.StatusInternalServerError, logger)
+			logger.Errorf("Failed to get records from controller: %s", err.Error())
+			writeError(w, err, logger)
 			return
 		}
-		recordsAPI := builder.BuildAPIRecordsFromControllerRecords(records)
-		// Write JSON by stream?
-		writeResponse(w, recordsAPI, http.StatusOK, logger)
+
+		writeResponse(w, records, http.StatusOK, logger)
 	}
 }
 
@@ -39,22 +37,22 @@ func NewGetRecordHandler(apictx *APIContext) http.HandlerFunc {
 		logger = logger.WithFields(log.Fields{
 			"cor_id": rctx.corID.String(),
 		})
+
 		recordID, err := getIDFrom(rctx.params, logger)
 		if err != nil {
-			logger.Warnf("Invalid record id: %s", err.Error())
-			writeResponse(w,
-				api.Error{Message: api.InvalidRecordIDMessage}, http.StatusBadRequest, logger)
+			logger.Errorf("Invalid record id: %s", err.Error())
+			writeResponse(w, Error{Message: InvalidRecordIDMessage}, http.StatusBadRequest, logger)
 			return
 		}
+
 		record, err := apictx.ctrl.CredentialRecord(recordID)
 		if err != nil {
-			logger.Warnf("Failed to get records from controller: %s", err.Error())
-			writeResponse(w,
-				api.Error{Message: api.InternalErrorMessage}, http.StatusInternalServerError, logger)
+			logger.Errorf("Failed to get records from controller: %s", err.Error())
+			writeError(w, err, logger)
 			return
 		}
-		// TODO: get record from db
-		writeResponse(w, builder.BuildAPIRecordFromControllerRecord(record), http.StatusOK, logger)
+
+		writeResponse(w, record, http.StatusOK, logger)
 	}
 }
 
@@ -67,105 +65,84 @@ func NewCreateRecordHandler(apictx *APIContext) http.HandlerFunc {
 		logger = logger.WithFields(log.Fields{
 			"cor_id": rctx.corID.String(),
 		})
-		var recordAPI *api.CredentialRecord
-		err := readJSON(r.Body, &recordAPI)
-		defer r.Body.Close()
-		if err != nil {
-			logger.Warnf("Failed to read JSON: %s", err.Error())
-			writeResponse(w,
-				api.Error{Message: api.InvalidJSONMessage}, http.StatusBadRequest, logger)
+
+		var payload model.CredentialRecordForm
+		if err := readBody(r.Body, &payload); err != nil {
+			logger.Errorf("Failed to read body: %s", err.Error())
+			writeResponse(w, Error{Message: InvalidJSONMessage}, http.StatusBadRequest, logger)
 			return
 		}
-		record := builder.BuildControllerRecordFromAPIRecord(recordAPI)
-		// TODO: if exists return err (409 Conflict)
-		resultRecord, err := apictx.ctrl.CreateRecord(&record)
+
+		result, err := apictx.ctrl.CreateRecord(&payload)
 		if err != nil {
-			logger.Warnf("Failed to get records from controller: %s", err.Error())
-			writeResponse(w,
-				api.Error{Message: api.InternalErrorMessage}, http.StatusInternalServerError, logger)
+			logger.Errorf("Failed to create record: %s", err.Error())
+			writeError(w, err, logger)
 			return
 		}
-		// TODO: get record from db
-		writeResponse(w, builder.BuildAPIRecordFromControllerRecord(resultRecord), http.StatusCreated, logger)
+
+		writeResponse(w, result, http.StatusCreated, logger)
 	}
 }
 
 func NewUpdateRecordHandler(apictx *APIContext) http.HandlerFunc {
 	logger := apictx.logger.WithFields(log.Fields{
-		"handler": "UpdateRecords",
+		"handler": "UpdateRecord",
 	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		rctx := unpackRequestContext(r.Context(), logger)
 		logger = logger.WithFields(log.Fields{
 			"cor_id": rctx.corID.String(),
 		})
+
 		recordID, err := getIDFrom(rctx.params, logger)
 		if err != nil {
-			logger.Warnf("Invalid record id: %s", err.Error())
-			writeResponse(w,
-				api.Error{Message: api.InvalidRecordIDMessage}, http.StatusBadRequest, logger)
+			logger.Errorf("Invalid record id: %s", err.Error())
+			writeResponse(w, Error{Message: InvalidRecordIDMessage}, http.StatusBadRequest, logger)
 			return
 		}
-		var recordAPI *api.CredentialRecord
-		body, err := io.ReadAll(r.Body)
+
+		var payload model.CredentialRecordForm
+		if err = readBody(r.Body, &payload); err != nil {
+			logger.Errorf("Failed to read body: %s", err.Error())
+			writeResponse(w, Error{Message: InvalidJSONMessage}, http.StatusBadRequest, logger)
+			return
+		}
+
+		result, err := apictx.ctrl.UpdateRecord(recordID, &payload)
 		if err != nil {
-			logger.Warnf("Failed to read JSON: %s", err.Error())
-			writeResponse(w,
-				api.Error{Message: api.InvalidJSONMessage}, http.StatusBadRequest, logger)
+			logger.Errorf("Failed to update records: %s", err.Error())
+			writeError(w, err, logger)
 			return
 		}
-		defer r.Body.Close()
-		err = json.Unmarshal(body, &recordAPI)
-		if err != nil {
-			logger.Warnf("failed to unmarshal JSON file: %s", err.Error())
-			writeResponse(w,
-				api.Error{Message: api.InternalErrorMessage}, http.StatusBadRequest, logger)
-			return
-		}
-		if recordID != recordAPI.ID {
-			logger.Warn("Record id from path parameter doesn't match id from new record structure")
-			writeResponse(w,
-				api.Error{Message: api.InvalidJSONMessage}, http.StatusBadRequest, logger)
-			return
-		}
-		record := builder.BuildControllerRecordFromAPIRecord(recordAPI)
-		resultRecord, err := apictx.ctrl.UpdateRecord(recordID, &record)
-		if err != nil {
-			logger.Warnf("Failed to get records from controller: %s", err.Error())
-			writeResponse(w,
-				api.Error{Message: api.InternalErrorMessage}, http.StatusInternalServerError, logger)
-			return
-		}
-		// TODO: get record from db
-		writeResponse(w,
-			builder.BuildAPIRecordFromControllerRecord(resultRecord), http.StatusAccepted, logger)
+
+		writeResponse(w, result, http.StatusAccepted, logger)
 	}
 }
 
 func NewDeleteRecordHandler(apictx *APIContext) http.HandlerFunc {
 	logger := apictx.logger.WithFields(log.Fields{
-		"handler": "DeleteRecords",
+		"handler": "DeleteRecord",
 	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		rctx := unpackRequestContext(r.Context(), logger)
 		logger = logger.WithFields(log.Fields{
 			"cor_id": rctx.corID.String(),
 		})
+
 		recordID, err := getIDFrom(rctx.params, logger)
 		if err != nil {
 			logger.Warnf("Invalid record id: %s", err.Error())
-			writeResponse(w,
-				api.Error{Message: api.InvalidRecordIDMessage}, http.StatusBadRequest, logger)
+			writeResponse(w, Error{Message: InvalidRecordIDMessage}, http.StatusBadRequest, logger)
 			return
 		}
-		resultRecord, err := apictx.ctrl.DeleteRecord(recordID)
+
+		result, err := apictx.ctrl.DeleteRecord(recordID)
 		if err != nil {
-			logger.Errorf("Failed to get records from controller: %s", err.Error())
-			writeResponse(w,
-				api.Error{Message: api.InternalErrorMessage}, http.StatusInternalServerError, logger)
+			logger.Errorf("Failed to delete records: %s", err.Error())
+			writeError(w, err, logger)
 			return
 		}
-		writeResponse(w,
-			builder.BuildAPIRecordFromControllerRecord(resultRecord), http.StatusOK, logger)
+
+		writeResponse(w, result, http.StatusOK, logger)
 	}
 }

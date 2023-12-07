@@ -40,12 +40,12 @@ func main() {
 		logger.Fatalf("failed to init userRepo: %s", err.Error())
 	}
 
-	credentialRecordRepo, err := repo.NewCredentialRecordRepository(db)
+	recordRepo, err := repo.NewRecordRepository(db)
 	if err != nil {
 		logger.Fatalf("failed to init credentialRecordRepo: %s", err.Error())
 	}
 
-	ctrl, err := controller.New(logger, userRepo, credentialRecordRepo)
+	ctrl, err := controller.New(logger, userRepo, recordRepo)
 	if err != nil {
 		logger.Fatalf("failed to init ctrl: %s", err.Error())
 	}
@@ -53,11 +53,11 @@ func main() {
 	serviceAPI := api.New(&api.Config{Port: config.API.Port}, ctrl, logger)
 
 	go func() {
-		logger.Infof("Staring server, listening on %s", config.API.Port)
+		logger.Infof("Staring server. Listening on port %d", config.API.Port)
 
 		err = serviceAPI.Start()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Errorf("failed to start server %s", err.Error())
+			logger.Errorf("Failed to start server %s", err.Error())
 			return
 		}
 	}()
@@ -70,15 +70,13 @@ func main() {
 
 	err = repo.CloseConnection(db)
 	if err != nil {
-		logger.Warnf("failed to close DB: %s", err.Error())
+		logger.Errorf("Failed to close DB: %s", err.Error())
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), config.API.ShutdownTimeout)
 	defer cancel()
 
-	err = serviceAPI.Stop(ctx)
-	if err != nil {
+	if err = serviceAPI.Stop(ctx); err != nil {
 		logger.Fatalf("failed to stop application %s", err.Error())
 	}
-
 }

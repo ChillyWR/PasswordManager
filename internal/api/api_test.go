@@ -57,7 +57,7 @@ func setup() *APIContext {
 		logger.Fatalf("failed to initialize DB: %s", err.Error())
 	}
 
-	credentialRecordRepo, err := repo.NewCredentialRecordRepository(db)
+	credentialRecordRepo, err := repo.NewRecordRepository(db)
 	if err != nil {
 		logger.Fatalf("failed to initialize DB: %s", err.Error())
 	}

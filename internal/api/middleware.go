@@ -10,14 +10,13 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/okutsen/PasswordManager/internal/log"
-	"github.com/okutsen/PasswordManager/model/api"
 )
 
 func AuthorizationCheck(log log.Logger, next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		tokenStr := r.Header.Get(AuthorizationTokenHPN)
 		if tokenStr == "" {
-			writeResponse(w, api.Error{Message: api.UnAuthorizedMessage}, http.StatusUnauthorized, log)
+			writeResponse(w, Error{Message: UnAuthorizedMessage}, http.StatusUnauthorized, log)
 			return
 		}
 		// TODO: use Bearer format
@@ -33,7 +32,7 @@ func AuthorizationCheck(log log.Logger, next httprouter.Handle) httprouter.Handl
 
 		if !token.Valid {
 			log.Warn("Received invalid JSW token")
-			writeResponse(w, api.Error{Message: "Invalid token"}, http.StatusUnauthorized, log)
+			writeResponse(w, Error{Message: "Invalid token"}, http.StatusUnauthorized, log)
 			return
 		}
 		next(w, r, ps)

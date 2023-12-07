@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/okutsen/PasswordManager/model/db"
+	"github.com/okutsen/PasswordManager/model"
 )
 
 func NewUserRepository(db *gorm.DB) (*UserRepository, error) {
@@ -23,8 +23,8 @@ type UserRepository struct {
 	db *gorm.DB
 }
 
-func (r *UserRepository) GetAll() ([]db.User, error) {
-	var user []db.User
+func (r *UserRepository) GetAll() ([]model.User, error) {
+	var user []model.User
 	result := r.db.Find(&user)
 	err := result.Error
 	if err != nil {
@@ -33,8 +33,8 @@ func (r *UserRepository) GetAll() ([]db.User, error) {
 
 	return user, nil
 }
-func (r *UserRepository) Get(id uuid.UUID) (*db.User, error) {
-	var user db.User
+func (r *UserRepository) Get(id uuid.UUID) (*model.User, error) {
+	var user model.User
 	result := r.db.First(&user, id)
 	err := result.Error
 	if err != nil {
@@ -44,7 +44,7 @@ func (r *UserRepository) Get(id uuid.UUID) (*db.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepository) Create(user *db.User) (*db.User, error) {
+func (r *UserRepository) Create(user *model.User) (*model.User, error) {
 	user.ID = uuid.New()
 	result := r.db.Create(user)
 	err := result.Error
@@ -55,7 +55,7 @@ func (r *UserRepository) Create(user *db.User) (*db.User, error) {
 	return user, nil
 }
 
-func (r *UserRepository) Update(user *db.User) (*db.User, error) {
+func (r *UserRepository) Update(user *model.User) (*model.User, error) {
 	result := r.db.Model(user).Clauses(clause.Returning{}).Updates(user)
 	err := result.Error
 	if err != nil {
@@ -65,8 +65,8 @@ func (r *UserRepository) Update(user *db.User) (*db.User, error) {
 	return user, nil
 }
 
-func (r *UserRepository) Delete(id uuid.UUID) (*db.User, error) {
-	var user db.User
+func (r *UserRepository) Delete(id uuid.UUID) (*model.User, error) {
+	var user model.User
 	result := r.db.Model(&user).Clauses(clause.Returning{}).Delete(&user, id)
 	err := result.Error
 	if err != nil {

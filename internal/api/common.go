@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 
@@ -10,7 +11,30 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/okutsen/PasswordManager/internal/log"
+	"github.com/okutsen/PasswordManager/pkg/pmerror"
 )
+
+const (
+	// PPN: Path Parameter Name
+	// HPN: Header Parameter Name
+	IDPPN                 = "id"
+	CorrelationIDHPN      = "X-Request-ID"
+	AuthorizationTokenHPN = "Authorization"
+
+	RequestContextName = "rctx"
+)
+
+const (
+	InvalidJSONMessage     = "Invalid JSON"
+	InvalidRecordIDMessage = "Invalid record ID"
+	InvalidUserIDMessage   = "Invalid user ID"
+	InternalErrorMessage   = "Oops, something went wrong"
+	UnAuthorizedMessage    = "Sign in to use service"
+)
+
+type Error struct {
+	Message string `json:"message"`
+}
 
 // unpackRequestContext gets and validates RequestContext from ctx
 func unpackRequestContext(ctx context.Context, logger log.Logger) *RequestContext {
@@ -25,32 +49,52 @@ func unpackRequestContext(ctx context.Context, logger log.Logger) *RequestContex
 func getIDFrom(ps httprouter.Params, logger log.Logger) (uuid.UUID, error) {
 	idStr := ps.ByName(IDPPN)
 	if idStr == "" {
-		logger.Fatal("Failed to get path parameter: there is no id")
+		logger.Fatal("Failed to get path parameter")
 	}
 	return uuid.Parse(idStr)
 }
 
-func readJSON(requestBody io.ReadCloser, out any) error {
+func readBody(body io.ReadCloser, v any) error {
 	// TODO: prevent overflow (read by batches or set max size)
-	recordsJSON, err := io.ReadAll(requestBody)
-	defer requestBody.Close()
+	raw, err := io.ReadAll(body)
+	defer body.Close()
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(recordsJSON, out)
+
+	err = json.Unmarshal(raw, v)
 	if err != nil {
 		return err
 	}
+
 	return err
 }
 
 func writeResponse(w http.ResponseWriter, body any, statusCode int, logger log.Logger) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	err := json.NewEncoder(w).Encode(body)
-	if err != nil {
-		logger.Warnf("Failed to write JSON response: %s", err.Error())
+	if body != nil {
+		if err := json.NewEncoder(w).Encode(body); err != nil {
+			logger.Errorf("Failed to write JSON response: %s", err.Error())
+		}
 	}
-	// TODO: do not log private info
-	logger.Debugf("Response written: %+v", body)
+	// do not log private info
+	// logger.Debugf("Response written: %+v", body)
+}
+
+func writeError(w http.ResponseWriter, err error, logger log.Logger) {
+	writeResponse(w, nil, errorStatus(err), logger)
+}
+
+func errorStatus(err error) int {
+	switch {
+	case errors.Is(err, pmerror.ErrInvalidInput):
+		return http.StatusBadRequest
+	case errors.Is(err, pmerror.ErrNotFound):
+		return http.StatusNotFound
+	case errors.Is(err, pmerror.ErrForbidden):
+		return http.StatusForbidden
+	default:
+		return http.StatusInternalServerError
+	}
 }
