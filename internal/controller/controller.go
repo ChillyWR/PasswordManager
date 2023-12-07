@@ -82,8 +82,11 @@ func (c *Controller) CreateRecord(form *model.CredentialRecordForm) (*model.Cred
 
 	// TODO: fill user info
 	record := model.CredentialRecord{
-		Name:  *form.Name,
-		Notes: &encNotes,
+		ID:        uuid.New(),
+		Name:      *form.Name,
+		Notes:     &encNotes,
+		CreatedOn: time.Now().UTC(),
+		UpdatedOn: time.Now().UTC(),
 	}
 
 	return c.recordRepo.Create(&record)
@@ -98,7 +101,7 @@ func (c *Controller) UpdateRecord(id uuid.UUID, form *model.CredentialRecordForm
 		ID:        id,
 		UpdatedOn: time.Now().UTC(),
 	}
-	// TODO: validate that if Name is nil repo wont update name to empty string
+
 	if form.Name != nil {
 		record.Name = *form.Name
 	}
@@ -150,8 +153,11 @@ func (c *Controller) CreateUser(form *model.UserForm) (*model.User, error) {
 	}
 
 	user := model.User{
-		Name:     *form.Name,
-		Password: encPassword,
+		ID:        uuid.New(),
+		Name:      *form.Name,
+		Password:  encPassword,
+		CreatedOn: time.Now().UTC(),
+		UpdatedOn: time.Now().UTC(),
 	}
 
 	result, err := c.userRepo.Create(&user)

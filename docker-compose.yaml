@@ -47,6 +47,7 @@ services:
     volumes:
       - ./internal/repo/migrations:/migrations
     command: -path /migrations -database postgres://${PM_DB_USERNAME}:${PM_DB_PASSWORD}@postgres:${PM_DB_PORT}/${PM_DB_NAME}?sslmode=${PM_DB_SSL_MODE} up
+    container_name: migrations
     networks:
       - db_network
 

@@ -33,6 +33,7 @@ func (r *RecordRepository) GetAll() ([]model.CredentialRecord, error) {
 
 	return records, nil
 }
+
 func (r *RecordRepository) Get(id uuid.UUID) (*model.CredentialRecord, error) {
 	var record model.CredentialRecord
 	result := r.db.First(&record, id)
@@ -45,7 +46,6 @@ func (r *RecordRepository) Get(id uuid.UUID) (*model.CredentialRecord, error) {
 }
 
 func (r *RecordRepository) Create(record *model.CredentialRecord) (*model.CredentialRecord, error) {
-	record.ID = uuid.New()
 	result := r.db.Create(record)
 	err := result.Error
 	if err != nil {
