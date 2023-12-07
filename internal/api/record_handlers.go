@@ -17,14 +17,14 @@ func NewListRecordsHandler(apictx *APIContext) http.HandlerFunc {
 			"cor_id": rctx.corID.String(),
 		})
 
-		records, err := apictx.ctrl.AllRecords()
+		result, err := apictx.ctrl.AllRecords()
 		if err != nil {
-			logger.Errorf("Failed to get records from controller: %s", err.Error())
+			logger.Errorf("Failed to list records: %s", err.Error())
 			writeError(w, err, logger)
 			return
 		}
 
-		writeResponse(w, records, http.StatusOK, logger)
+		writeResponse(w, result, http.StatusOK, logger)
 	}
 }
 
@@ -45,14 +45,14 @@ func NewGetRecordHandler(apictx *APIContext) http.HandlerFunc {
 			return
 		}
 
-		record, err := apictx.ctrl.CredentialRecord(recordID)
+		result, err := apictx.ctrl.CredentialRecord(recordID)
 		if err != nil {
-			logger.Errorf("Failed to get records from controller: %s", err.Error())
+			logger.Errorf("Failed to get record: %s", err.Error())
 			writeError(w, err, logger)
 			return
 		}
 
-		writeResponse(w, record, http.StatusOK, logger)
+		writeResponse(w, result, http.StatusOK, logger)
 	}
 }
 
@@ -110,7 +110,7 @@ func NewUpdateRecordHandler(apictx *APIContext) http.HandlerFunc {
 
 		result, err := apictx.ctrl.UpdateRecord(recordID, &payload)
 		if err != nil {
-			logger.Errorf("Failed to update records: %s", err.Error())
+			logger.Errorf("Failed to update record: %s", err.Error())
 			writeError(w, err, logger)
 			return
 		}
@@ -138,7 +138,7 @@ func NewDeleteRecordHandler(apictx *APIContext) http.HandlerFunc {
 
 		result, err := apictx.ctrl.DeleteRecord(recordID)
 		if err != nil {
-			logger.Errorf("Failed to delete records: %s", err.Error())
+			logger.Errorf("Failed to delete record: %s", err.Error())
 			writeError(w, err, logger)
 			return
 		}

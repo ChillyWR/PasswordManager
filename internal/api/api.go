@@ -90,8 +90,8 @@ func (api *API) SetUserEndpoints(r *httprouter.Router) {
 		AuthorizationCheck(api.ctx.logger, ContextSetter(api.ctx.logger,
 			NewListUsersHandler(api.ctx))))
 	r.POST("/users",
-		AuthorizationCheck(api.ctx.logger, ContextSetter(api.ctx.logger,
-			NewCreateUserHandler(api.ctx))))
+		ContextSetter(api.ctx.logger,
+			NewCreateUserHandler(api.ctx)))
 	r.GET(fmt.Sprintf("/users/:%s", IDPPN),
 		AuthorizationCheck(api.ctx.logger, ContextSetter(api.ctx.logger,
 			NewGetUserHandler(api.ctx))))
@@ -151,8 +151,10 @@ func NewFreeAccessHandler(logger log.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token, err := GenerateJWT(uuid.NewString())
 		if err != nil {
-			writeResponse(w, Error{Message: "Oops, failed to generate your token"}, http.StatusOK, logger)
+			logger.Errorf("Failed to generate jwt: %s", err.Error())
+			writeResponse(w, Error{Message: "Oops, failed to generate your token"}, http.StatusInternalServerError, logger)
 		}
+
 		t := struct {
 			Message string `json:"message,omitempty"`
 			Token   string `json:"token"`
@@ -160,6 +162,7 @@ func NewFreeAccessHandler(logger log.Logger) http.HandlerFunc {
 			Message: "Here, use this as Authorization header",
 			Token:   token,
 		}
+
 		writeResponse(w, &t, http.StatusOK, logger)
 	}
 }

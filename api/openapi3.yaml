@@ -26,14 +26,14 @@ components:
             content:
                 application/json:
                     schema:
-                        $ref: '#/components/schemas/Record'
+                        $ref: "#/components/schemas/Record"
             description: Request used for creating a record.
             required: true
         UpdateRecordRequest:
             content:
                 application/json:
                     schema:
-                        $ref: '#/components/schemas/Record'
+                        $ref: "#/components/schemas/Record"
             description: Request used for updating a record.
             required: true
     responses:
@@ -41,69 +41,55 @@ components:
             content:
                 application/json:
                     schema:
-                        $ref: '#/components/schemas/Error'
+                        $ref: "#/components/schemas/Error"
             description: Response when errors happen.
         ListRecordsResponse:
             content:
                 application/json:
                     schema:
                         items:
-                            $ref: '#/components/schemas/Record'
+                            $ref: "#/components/schemas/Record"
                         type: array
             description: Response returns back all records.
         RecordResponse:
             content:
                 application/json:
                     schema:
-                        $ref: '#/components/schemas/Record'
+                        $ref: "#/components/schemas/Record"
             description: Response returns back successfully found or created record.
     schemas:
+        CredentialRecord:
+            properties:
+                created_at:
+                    format: date-time
+                    type: string
+                created_by: {}
+                id: {}
+                name:
+                    type: string
+                notes:
+                    type: string
+                updated_at:
+                    format: date-time
+                    type: string
+                updated_by: {}
+            type: object
         Error:
             properties:
                 message:
                     type: string
             type: object
-        Record:
-            properties:
-                created_at:
-                    format: date-time
-                    type: string
-                created_by:
-                    type: string
-                description:
-                    type: string
-                id: {}
-                login:
-                    type: string
-                name:
-                    type: string
-                password:
-                    type: string
-                updated_at:
-                    format: date-time
-                    type: string
-                updated_by:
-                    type: string
-                url:
-                    type: string
-            type: object
         User:
             properties:
-                created_at:
+                created_on:
                     format: date-time
                     type: string
-                email:
-                    type: string
                 id: {}
-                login:
-                    type: string
                 name:
                     type: string
                 password:
                     type: string
-                phone:
-                    type: string
-                updated_at:
+                updated_on:
                     format: date-time
                     type: string
             type: object
@@ -124,56 +110,56 @@ paths:
             operationId: ListRecords
             responses:
                 "200":
-                    $ref: '#/components/responses/ListRecordsResponse'
+                    $ref: "#/components/responses/ListRecordsResponse"
                 "500":
-                    $ref: '#/components/responses/ErrorResponse'
+                    $ref: "#/components/responses/ErrorResponse"
         post:
             operationId: CreateRecord
             requestBody:
-                $ref: '#/components/requestBodies/CreateRecordRequest'
+                $ref: "#/components/requestBodies/CreateRecordRequest"
             responses:
                 "201":
-                    $ref: '#/components/responses/RecordResponse'
+                    $ref: "#/components/responses/RecordResponse"
                 "400":
-                    $ref: '#/components/responses/ErrorResponse'
+                    $ref: "#/components/responses/ErrorResponse"
                 "500":
-                    $ref: '#/components/responses/ErrorResponse'
+                    $ref: "#/components/responses/ErrorResponse"
     /records/{id}:
         delete:
             operationId: DeleteRecord
             parameters:
-                - $ref: '#/components/parameters/IDPPN'
+                - $ref: "#/components/parameters/IDPPN"
             responses:
                 "200":
                     description: Record deleted
                 "400":
-                    $ref: '#/components/responses/ErrorResponse'
+                    $ref: "#/components/responses/ErrorResponse"
                 "500":
-                    $ref: '#/components/responses/ErrorResponse'
+                    $ref: "#/components/responses/ErrorResponse"
         get:
             operationId: GetRecord
             parameters:
-                - $ref: '#/components/parameters/IDPPN'
+                - $ref: "#/components/parameters/IDPPN"
             responses:
                 "200":
-                    $ref: '#/components/responses/RecordResponse'
+                    $ref: "#/components/responses/RecordResponse"
                 "400":
-                    $ref: '#/components/responses/ErrorResponse'
+                    $ref: "#/components/responses/ErrorResponse"
                 "500":
-                    $ref: '#/components/responses/ErrorResponse'
+                    $ref: "#/components/responses/ErrorResponse"
         put:
             operationId: UpdateRecord
             parameters:
-                - $ref: '#/components/parameters/IDPPN'
+                - $ref: "#/components/parameters/IDPPN"
             requestBody:
-                $ref: '#/components/requestBodies/UpdateRecordRequest'
+                $ref: "#/components/requestBodies/UpdateRecordRequest"
             responses:
                 "202":
-                    $ref: '#/components/responses/RecordResponse'
+                    $ref: "#/components/responses/RecordResponse"
                 "400":
-                    $ref: '#/components/responses/ErrorResponse'
+                    $ref: "#/components/responses/ErrorResponse"
                 "500":
-                    $ref: '#/components/responses/ErrorResponse'
+                    $ref: "#/components/responses/ErrorResponse"
 servers:
     - description: Local development
-      url: http://127.0.0.1:9999
+      url: http://127.0.0.1:5000

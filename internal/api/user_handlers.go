@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 
+	"github.com/google/uuid"
+
 	"github.com/okutsen/PasswordManager/internal/log"
 	"github.com/okutsen/PasswordManager/model"
 )
@@ -19,7 +21,7 @@ func NewListUsersHandler(apictx *APIContext) http.HandlerFunc {
 
 		users, err := apictx.ctrl.AllUsers()
 		if err != nil {
-			logger.Errorf("Failed to get users from controller: %s", err.Error())
+			logger.Errorf("Failed to list users: %s", err.Error())
 			writeError(w, err, logger)
 			return
 		}
@@ -47,7 +49,7 @@ func NewGetUserHandler(apictx *APIContext) http.HandlerFunc {
 
 		user, err := apictx.ctrl.User(userID)
 		if err != nil {
-			logger.Errorf("Failed to get users: %s", err.Error())
+			logger.Errorf("Failed to get user: %s", err.Error())
 			writeError(w, err, logger)
 			return
 		}
@@ -80,7 +82,22 @@ func NewCreateUserHandler(apictx *APIContext) http.HandlerFunc {
 			return
 		}
 
-		writeResponse(w, result, http.StatusCreated, logger)
+		token, err := GenerateJWT(uuid.NewString())
+		if err != nil {
+			logger.Errorf("Failed to generate jwt: %s", err.Error())
+			writeResponse(w, nil, http.StatusInternalServerError, logger)
+			return
+		}
+
+		response := struct{
+			User *model.User
+			Token string
+		} {
+			User: result,
+			Token: token,
+		}
+		
+		writeResponse(w, response, http.StatusCreated, logger)
 	}
 }
 
