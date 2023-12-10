@@ -42,20 +42,23 @@ func main() {
 
 	recordRepo, err := repo.NewRecordRepository(db)
 	if err != nil {
-		logger.Fatalf("failed to init credentialRecordRepo: %s", err.Error())
+		logger.Fatalf("failed to init recordRepo: %s", err.Error())
 	}
 
-	ctrl, err := controller.New(logger, userRepo, recordRepo)
+	ctrl, err := controller.New(userRepo, recordRepo, logger)
 	if err != nil {
 		logger.Fatalf("failed to init ctrl: %s", err.Error())
 	}
 
-	serviceAPI := api.New(&api.Config{Port: config.API.Port}, ctrl, logger)
+	apiService, err := api.New(&api.Config{Port: config.API.Port}, ctrl, logger)
+	if err != nil {
+		logger.Fatalf("failed to init serviceAPI: %s", err.Error())
+	}
 
 	go func() {
 		logger.Infof("Staring server. Listening on port %d", config.API.Port)
 
-		err = serviceAPI.Start()
+		err = apiService.Start()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Errorf("Failed to start server %s", err.Error())
 			return
@@ -76,7 +79,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), config.API.ShutdownTimeout)
 	defer cancel()
 
-	if err = serviceAPI.Stop(ctx); err != nil {
+	if err = apiService.Stop(ctx); err != nil {
 		logger.Fatalf("failed to stop application %s", err.Error())
 	}
 }

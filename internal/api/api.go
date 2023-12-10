@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -16,10 +17,10 @@ import (
 
 type Controller interface {
 	AllRecords() ([]model.CredentialRecord, error)
-	CredentialRecord(id uuid.UUID) (*model.CredentialRecord, error)
-	CreateRecord(record *model.CredentialRecordForm) (*model.CredentialRecord, error)
-	UpdateRecord(id uuid.UUID, record *model.CredentialRecordForm) (*model.CredentialRecord, error)
-	DeleteRecord(id uuid.UUID) (*model.CredentialRecord, error)
+	CredentialRecord(id uuid.UUID, userID uuid.UUID) (*model.CredentialRecord, error)
+	CreateRecord(record *model.CredentialRecordForm, userID uuid.UUID) (*model.CredentialRecord, error)
+	UpdateRecord(id uuid.UUID, record *model.CredentialRecordForm, userID uuid.UUID) (*model.CredentialRecord, error)
+	DeleteRecord(id uuid.UUID, userID uuid.UUID) (*model.CredentialRecord, error)
 
 	AllUsers() ([]model.User, error)
 	User(id uuid.UUID) (*model.User, error)
@@ -30,6 +31,7 @@ type Controller interface {
 
 type RequestContext struct {
 	corID  uuid.UUID
+	userID uuid.UUID
 	params httprouter.Params
 }
 
@@ -46,74 +48,78 @@ type APIContext struct {
 
 type HandlerFunc func(rw http.ResponseWriter, r *http.Request, ctx *RequestContext)
 
-func New(config *Config, controller Controller, logger log.Logger) *API {
+func New(config *Config, ctrl Controller, logger log.Logger) (*API, error) {
+	if ctrl == nil {
+		return nil, errors.New("ctrl is nil")
+	}
+
 	return &API{
 		config: config,
 		ctx: &APIContext{
-			ctrl:   controller,
-			logger: logger.WithFields(log.Fields{"service": "API"}),
+			ctrl:   ctrl,
+			logger: logger.WithFields(log.Fields{"module": "api"}),
 		},
-	}
+	}, nil
 }
 
 func (api *API) Start() error {
 	router := httprouter.New()
 	api.SetFunctionalEndpoints(router)
-	api.SetRecordEndpoints(router)
 	api.SetUserEndpoints(router)
+	api.SetRecordEndpoints(router)
 
 	api.server = http.Server{Addr: api.config.Address(), Handler: router}
 
 	return api.server.ListenAndServe()
 }
 
-func (api *API) SetRecordEndpoints(r *httprouter.Router) {
-	r.GET("/records",
-		AuthorizationCheck(api.ctx.logger, ContextSetter(api.ctx.logger,
-			NewListRecordsHandler(api.ctx))))
-	r.POST("/records",
-		AuthorizationCheck(api.ctx.logger, ContextSetter(api.ctx.logger,
-			NewCreateRecordHandler(api.ctx))))
-	r.GET(fmt.Sprintf("/records/:%s", IDPPN),
-		AuthorizationCheck(api.ctx.logger, ContextSetter(api.ctx.logger,
-			NewGetRecordHandler(api.ctx))))
-	r.PUT(fmt.Sprintf("/records/:%s", IDPPN),
-		AuthorizationCheck(api.ctx.logger, ContextSetter(api.ctx.logger,
-			NewUpdateRecordHandler(api.ctx))))
-	r.DELETE(fmt.Sprintf("/records/:%s", IDPPN),
-		AuthorizationCheck(api.ctx.logger, ContextSetter(api.ctx.logger,
-			NewDeleteRecordHandler(api.ctx))))
-}
-
 func (api *API) SetUserEndpoints(r *httprouter.Router) {
 	r.GET("/users",
-		AuthorizationCheck(api.ctx.logger, ContextSetter(api.ctx.logger,
-			NewListUsersHandler(api.ctx))))
+		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+			Dispatch(NewListUsersHandler(api.ctx)))))
 	r.POST("/users",
 		ContextSetter(api.ctx.logger,
-			NewCreateUserHandler(api.ctx)))
+			Dispatch(NewCreateUserHandler(api.ctx))))
 	r.GET(fmt.Sprintf("/users/:%s", IDPPN),
-		AuthorizationCheck(api.ctx.logger, ContextSetter(api.ctx.logger,
-			NewGetUserHandler(api.ctx))))
+		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+			Dispatch(NewGetUserHandler(api.ctx)))))
 	r.PUT(fmt.Sprintf("/users/:%s", IDPPN),
-		AuthorizationCheck(api.ctx.logger, ContextSetter(api.ctx.logger,
-			NewUpdateUserHandler(api.ctx))))
+		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+			Dispatch(NewUpdateUserHandler(api.ctx)))))
 	r.DELETE(fmt.Sprintf("/users/:%s", IDPPN),
-		AuthorizationCheck(api.ctx.logger, ContextSetter(api.ctx.logger,
-			NewDeleteUserHandler(api.ctx))))
+		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+			Dispatch(NewDeleteUserHandler(api.ctx)))))
+}
+
+func (api *API) SetRecordEndpoints(r *httprouter.Router) {
+	r.GET("/records",
+		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+			Dispatch(NewListRecordsHandler(api.ctx)))))
+	r.POST("/records",
+		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+			Dispatch(NewCreateRecordHandler(api.ctx)))))
+	r.GET(fmt.Sprintf("/records/:%s", IDPPN),
+		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+			Dispatch(NewGetRecordHandler(api.ctx)))))
+	r.PUT(fmt.Sprintf("/records/:%s", IDPPN),
+		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+			Dispatch(NewUpdateRecordHandler(api.ctx)))))
+	r.DELETE(fmt.Sprintf("/records/:%s", IDPPN),
+		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+			Dispatch(NewDeleteRecordHandler(api.ctx)))))
 }
 
 func (api *API) SetFunctionalEndpoints(r *httprouter.Router) {
 	spec := NewOpenAPIv3(api.config, api.ctx.logger)
 	r.GET("/authMePlease",
 		ContextSetter(api.ctx.logger,
-			NewFreeAccessHandler(api.ctx.logger)))
+			Dispatch(NewFreeAccessHandler(api.ctx.logger))))
 	r.GET("/openapi3.json",
 		ContextSetter(api.ctx.logger,
-			NewJSONSpecHandler(api.ctx.logger, spec)))
+			Dispatch(NewJSONSpecHandler(api.ctx.logger, spec))))
 	r.GET("/openapi3.yaml",
 		ContextSetter(api.ctx.logger,
-			NewYAMLSpecHandler(api.ctx.logger, spec)))
+			Dispatch(NewYAMLSpecHandler(api.ctx.logger, spec))))
 }
 
 func (api *API) Stop(ctx context.Context) error {

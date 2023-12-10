@@ -12,12 +12,33 @@ import (
 	"github.com/okutsen/PasswordManager/internal/log"
 )
 
-func AuthorizationCheck(log log.Logger, next httprouter.Handle) httprouter.Handle {
+// ContextSetter reads header, creates RequestContext and adds it to r.Context
+func ContextSetter(logger log.Logger, next httprouter.Handle) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		corIDStr := r.Header.Get(CorrelationIDHPN)
+
+		corID, err := uuid.Parse(corIDStr)
+		if err != nil {
+			logger.Debugf("Invalid corID <%s>: %s", corIDStr, err)
+			corID = uuid.New()
+			logger.Debugf("Setting new corID: %s", corID.String())
+		}
+
+		ctx := context.WithValue(r.Context(), RequestContextName, &RequestContext{
+			corID:  corID,
+			params: ps,
+		})
+
+		next(w, r.WithContext(ctx), ps)
+	}
+}
+
+func AuthorizationCheck(logger log.Logger, next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		tokenStr := r.Header.Get(AuthorizationTokenHPN)
 		if tokenStr == "" {
-			log.Errorf("Failed to authorize: no token provided")
-			writeResponse(w, Error{Message: UnAuthorizedMessage}, http.StatusUnauthorized, log)
+			logger.Errorf("Failed to authorize: no token provided")
+			writeResponse(w, Error{Message: UnAuthorizedMessage}, http.StatusUnauthorized, logger)
 			return
 		}
 
@@ -28,37 +49,47 @@ func AuthorizationCheck(log log.Logger, next httprouter.Handle) httprouter.Handl
 			return SigningKey, nil
 		})
 		if err != nil {
-			log.Errorf("Failed to parse JWT token: %s", err.Error())
+			logger.Errorf("Failed to parse JWT token: %s", err.Error())
 			return
 		}
 
 		if !token.Valid {
-			log.Warn("Received invalid JSW token")
-			writeResponse(w, Error{Message: "Invalid token"}, http.StatusUnauthorized, log)
+			logger.Warn("Received invalid JSW token")
+			writeResponse(w, Error{Message: "Invalid token"}, http.StatusUnauthorized, logger)
 			return
 		}
 
-		next(w, r, ps)
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			logger.Errorf("Failed to extract claims from JWT token")
+			writeResponse(w, Error{Message: "Failed to extract claims"}, http.StatusInternalServerError, logger)
+			return
+		}
+
+		userIDStr, ok := claims["user_id"].(string)
+		if !ok {
+			logger.Errorf("Failed to extract user ID from JWT token claims")
+			writeResponse(w, Error{Message: "Failed to extract user ID from claims"}, http.StatusInternalServerError, logger)
+			return
+		}
+
+		userID, err := uuid.Parse(userIDStr)
+		if err != nil {
+			logger.Errorf("Failed to parse user ID <%s>: %s", userIDStr, err)
+			writeResponse(w, Error{Message: "Failed to extract user ID from claims"}, http.StatusInternalServerError, logger)
+			return
+		}
+
+		rctx := unpackRequestContext(r.Context(), logger)
+		rctx.userID = userID
+		ctx := context.WithValue(r.Context(), RequestContextName, rctx)
+
+		next(w, r.WithContext(ctx), ps)
 	}
 }
 
-// ContextSetter reads header, creates RequestContext and adds it to r.Context
-func ContextSetter(logger log.Logger, next http.HandlerFunc) httprouter.Handle {
+func Dispatch(next http.HandlerFunc) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		corIDStr := r.Header.Get(CorrelationIDHPN)
-
-		corID, err := uuid.Parse(corIDStr)
-		if err != nil {
-			logger.Warnf("Invalid corID <%s>: %s", corIDStr, err)
-			corID = uuid.New()
-			logger.Debugf("Setting new corID: %s", corID.String())
-		}
-
-		ctx := context.WithValue(r.Context(), RequestContextName, &RequestContext{
-			corID:  corID,
-			params: ps,
-		})
-
-		next(w, r.WithContext(ctx))
+		next(w, r)
 	}
 }

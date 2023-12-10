@@ -45,7 +45,7 @@ func NewGetRecordHandler(apictx *APIContext) http.HandlerFunc {
 			return
 		}
 
-		result, err := apictx.ctrl.CredentialRecord(recordID)
+		result, err := apictx.ctrl.CredentialRecord(recordID, rctx.userID)
 		if err != nil {
 			logger.Errorf("Failed to get record: %s", err.Error())
 			writeError(w, err, logger)
@@ -73,7 +73,7 @@ func NewCreateRecordHandler(apictx *APIContext) http.HandlerFunc {
 			return
 		}
 
-		result, err := apictx.ctrl.CreateRecord(&payload)
+		result, err := apictx.ctrl.CreateRecord(&payload, rctx.userID)
 		if err != nil {
 			logger.Errorf("Failed to create record: %s", err.Error())
 			writeError(w, err, logger)
@@ -108,7 +108,7 @@ func NewUpdateRecordHandler(apictx *APIContext) http.HandlerFunc {
 			return
 		}
 
-		result, err := apictx.ctrl.UpdateRecord(recordID, &payload)
+		result, err := apictx.ctrl.UpdateRecord(recordID, &payload, rctx.userID)
 		if err != nil {
 			logger.Errorf("Failed to update record: %s", err.Error())
 			writeError(w, err, logger)
@@ -136,7 +136,7 @@ func NewDeleteRecordHandler(apictx *APIContext) http.HandlerFunc {
 			return
 		}
 
-		result, err := apictx.ctrl.DeleteRecord(recordID)
+		result, err := apictx.ctrl.DeleteRecord(recordID, rctx.userID)
 		if err != nil {
 			logger.Errorf("Failed to delete record: %s", err.Error())
 			writeError(w, err, logger)

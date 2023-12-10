@@ -3,8 +3,6 @@ package api
 import (
 	"net/http"
 
-	"github.com/google/uuid"
-
 	"github.com/okutsen/PasswordManager/internal/log"
 	"github.com/okutsen/PasswordManager/model"
 )
@@ -82,7 +80,7 @@ func NewCreateUserHandler(apictx *APIContext) http.HandlerFunc {
 			return
 		}
 
-		token, err := GenerateJWT(uuid.NewString())
+		token, err := GenerateJWT(result.ID.String())
 		if err != nil {
 			logger.Errorf("Failed to generate jwt: %s", err.Error())
 			writeResponse(w, nil, http.StatusInternalServerError, logger)
