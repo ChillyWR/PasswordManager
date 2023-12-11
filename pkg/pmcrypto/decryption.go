@@ -1,4 +1,4 @@
-package controller
+package pmcrypto
 
 import (
 	"crypto/aes"

@@ -9,11 +9,24 @@ import (
 	"github.com/okutsen/PasswordManager/model"
 )
 
+const (
+	Salt = "abc&1*~#^2^#s0^=)^^7%b34"
+)
+
 type RecordRepository interface {
-	GetAll() ([]model.CredentialRecord, error)
-	Get(id uuid.UUID) (*model.CredentialRecord, error)
-	Create(record *model.CredentialRecord) (*model.CredentialRecord, error)
-	Update(record *model.CredentialRecord) (*model.CredentialRecord, error)
+	GetAll(userID uuid.UUID) ([]model.CredentialRecord, []model.LoginRecord, []model.CardRecord, []model.IdentityRecord, error)
+	GetCredentialRecord(id uuid.UUID) (*model.CredentialRecord, error)
+	GetLogin(id uuid.UUID) (*model.LoginRecord, error)
+	GetCard(id uuid.UUID) (*model.CardRecord, error)
+	GetIdentity(id uuid.UUID) (*model.IdentityRecord, error)
+	CreateCredentialRecord(record *model.CredentialRecord) (*model.CredentialRecord, error)
+	CreateLogin(record *model.LoginRecord) (*model.LoginRecord, error)
+	CreateCard(record *model.CardRecord) (*model.CardRecord, error)
+	CreateIdentity(record *model.IdentityRecord) (*model.IdentityRecord, error)
+	UpdateCredentialRecord(record *model.CredentialRecord) (*model.CredentialRecord, error)
+	UpdateLogin(record *model.LoginRecord) (*model.LoginRecord, error)
+	UpdateCard(record *model.CardRecord) (*model.CardRecord, error)
+	UpdateIdentity(record *model.IdentityRecord) (*model.IdentityRecord, error)
 	Delete(id uuid.UUID) (*model.CredentialRecord, error)
 }
 

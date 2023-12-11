@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/okutsen/PasswordManager/model"
+	"github.com/okutsen/PasswordManager/pkg/pmcrypto"
 	"github.com/okutsen/PasswordManager/pkg/pmerror"
 )
 
@@ -19,7 +20,7 @@ func (c *Controller) User(id uuid.UUID) (*model.User, error) {
 		return nil, err
 	}
 
-	decPassword, err := Decrypt(repoUser.Password, Salt)
+	decPassword, err := pmcrypto.Decrypt(repoUser.Password, Salt)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +35,7 @@ func (c *Controller) CreateUser(form *model.UserForm) (*model.User, error) {
 		return nil, fmt.Errorf("validate: %w", err)
 	}
 
-	encPassword, err := Encrypt(*form.Password, Salt)
+	encPassword, err := pmcrypto.Encrypt(*form.Password, Salt)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +53,7 @@ func (c *Controller) CreateUser(form *model.UserForm) (*model.User, error) {
 		return nil, err
 	}
 
-	result.Password, err = Decrypt(result.Password, Salt)
+	result.Password, err = pmcrypto.Decrypt(result.Password, Salt)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +76,7 @@ func (c *Controller) UpdateUser(id uuid.UUID, form *model.UserForm) (*model.User
 	}
 
 	if form.Password != nil {
-		encPassword, err := Encrypt(*form.Password, Salt)
+		encPassword, err := pmcrypto.Encrypt(*form.Password, Salt)
 		if err != nil {
 			return nil, fmt.Errorf("encrypt: %w", err)
 		}

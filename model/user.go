@@ -17,10 +17,6 @@ type User struct {
 	UpdatedOn time.Time `json:"updated_on"`
 }
 
-func (User) TableName() string {
-	return "reg_user"
-  }
-
 // Forms are meant to be filled by user
 
 type UserForm struct {

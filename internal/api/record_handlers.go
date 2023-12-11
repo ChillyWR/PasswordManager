@@ -1,6 +1,8 @@
 package api
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/okutsen/PasswordManager/internal/log"
@@ -17,14 +19,24 @@ func NewListRecordsHandler(apictx *APIContext) http.HandlerFunc {
 			"cor_id": rctx.corID.String(),
 		})
 
-		result, err := apictx.ctrl.AllRecords()
+		secureNotes, logins, cards, identities, err := apictx.ctrl.AllRecords(rctx.userID)
 		if err != nil {
 			logger.Errorf("Failed to list records: %s", err.Error())
 			writeError(w, err, logger)
 			return
 		}
 
-		writeResponse(w, result, http.StatusOK, logger)
+		writeResponse(w, struct {
+			SecureNotes []model.CredentialRecord `json:"secure_notes"`
+			Logins      []model.LoginRecord      `json:"logins"`
+			Cards       []model.CardRecord       `json:"cards"`
+			Identities  []model.IdentityRecord   `json:"identities"`
+		}{
+			SecureNotes: secureNotes,
+			Logins:      logins,
+			Cards:       cards,
+			Identities:  identities,
+		}, http.StatusOK, logger)
 	}
 }
 
@@ -45,7 +57,7 @@ func NewGetRecordHandler(apictx *APIContext) http.HandlerFunc {
 			return
 		}
 
-		result, err := apictx.ctrl.CredentialRecord(recordID, rctx.userID)
+		result, err := apictx.ctrl.GetRecord(recordID, rctx.userID)
 		if err != nil {
 			logger.Errorf("Failed to get record: %s", err.Error())
 			writeError(w, err, logger)
@@ -66,14 +78,17 @@ func NewCreateRecordHandler(apictx *APIContext) http.HandlerFunc {
 			"cor_id": rctx.corID.String(),
 		})
 
-		var payload model.CredentialRecordForm
+		var payload struct {
+			Type string          `json:"type"`
+			Form json.RawMessage `json:"form"`
+		}
 		if err := readBody(r.Body, &payload); err != nil {
 			logger.Errorf("Failed to read body: %s", err.Error())
 			writeResponse(w, Error{Message: InvalidJSONMessage}, http.StatusBadRequest, logger)
 			return
 		}
 
-		result, err := apictx.ctrl.CreateRecord(&payload, rctx.userID)
+		result, err := apictx.ctrl.CreateRecord(payload.Type, payload.Form, rctx.userID)
 		if err != nil {
 			logger.Errorf("Failed to create record: %s", err.Error())
 			writeError(w, err, logger)
@@ -101,14 +116,15 @@ func NewUpdateRecordHandler(apictx *APIContext) http.HandlerFunc {
 			return
 		}
 
-		var payload model.CredentialRecordForm
-		if err = readBody(r.Body, &payload); err != nil {
+		raw, err := io.ReadAll(r.Body) // TODO: prevent potential overflow
+		defer r.Body.Close()
+		if err != nil {
 			logger.Errorf("Failed to read body: %s", err.Error())
 			writeResponse(w, Error{Message: InvalidJSONMessage}, http.StatusBadRequest, logger)
 			return
 		}
 
-		result, err := apictx.ctrl.UpdateRecord(recordID, &payload, rctx.userID)
+		result, err := apictx.ctrl.UpdateRecord(recordID, raw, rctx.userID)
 		if err != nil {
 			logger.Errorf("Failed to update record: %s", err.Error())
 			writeError(w, err, logger)

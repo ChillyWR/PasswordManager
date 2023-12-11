@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -16,10 +17,10 @@ import (
 )
 
 type Controller interface {
-	AllRecords() ([]model.CredentialRecord, error)
-	CredentialRecord(id uuid.UUID, userID uuid.UUID) (*model.CredentialRecord, error)
-	CreateRecord(record *model.CredentialRecordForm, userID uuid.UUID) (*model.CredentialRecord, error)
-	UpdateRecord(id uuid.UUID, record *model.CredentialRecordForm, userID uuid.UUID) (*model.CredentialRecord, error)
+	AllRecords(userID uuid.UUID) ([]model.CredentialRecord, []model.LoginRecord, []model.CardRecord, []model.IdentityRecord, error)
+	GetRecord(id uuid.UUID, userID uuid.UUID) (interface{}, error)
+	CreateRecord(recordType string, record json.RawMessage, userID uuid.UUID) (interface{}, error)
+	UpdateRecord(id uuid.UUID, rawForm json.RawMessage, userID uuid.UUID) (interface{}, error)
 	DeleteRecord(id uuid.UUID, userID uuid.UUID) (*model.CredentialRecord, error)
 
 	AllUsers() ([]model.User, error)

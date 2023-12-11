@@ -62,7 +62,11 @@ func setup() *APIContext {
 		logger.Fatalf("failed to initialize DB: %s", err.Error())
 	}
 
-	ctrl, _ := controller.New(userRepo, recordRepo, logger)
+	ctrl, err := controller.New(userRepo, recordRepo, logger)
+	if err != nil {
+		logger.Fatalf("failed to init ctrl: %s", err.Error())
+	}
+
 	return &APIContext{ctrl, logger}
 }
 

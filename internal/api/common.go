@@ -55,15 +55,13 @@ func getIDFrom(ps httprouter.Params, logger log.Logger) (uuid.UUID, error) {
 }
 
 func readBody(body io.ReadCloser, v any) error {
-	// TODO: prevent overflow (read by batches or set max size)
-	raw, err := io.ReadAll(body)
+	raw, err := io.ReadAll(body) // TODO: prevent potential overflow
 	defer body.Close()
 	if err != nil {
 		return err
 	}
-
-	err = json.Unmarshal(raw, v)
-	if err != nil {
+	
+	if err := json.Unmarshal(raw, v); err != nil {
 		return err
 	}
 
