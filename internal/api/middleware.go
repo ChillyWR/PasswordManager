@@ -33,7 +33,7 @@ func ContextSetter(logger log.Logger, next httprouter.Handle) httprouter.Handle 
 	}
 }
 
-func AuthorizationCheck(logger log.Logger, next httprouter.Handle) httprouter.Handle {
+func Authentication(logger log.Logger, next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		tokenStr := r.Header.Get(AuthorizationTokenHPN)
 		if tokenStr == "" {
@@ -50,6 +50,7 @@ func AuthorizationCheck(logger log.Logger, next httprouter.Handle) httprouter.Ha
 		})
 		if err != nil {
 			logger.Errorf("Failed to parse JWT token: %s", err.Error())
+			writeResponse(w, Error{Message: "Invalid token"}, http.StatusUnauthorized, logger)
 			return
 		}
 

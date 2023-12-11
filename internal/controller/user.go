@@ -20,12 +20,12 @@ func (c *Controller) User(id uuid.UUID) (*model.User, error) {
 		return nil, err
 	}
 
-	decPassword, err := pmcrypto.Decrypt(repoUser.Password, Salt)
+	v, err := pmcrypto.Decrypt(repoUser.Password, Salt)
 	if err != nil {
 		return nil, err
 	}
 
-	repoUser.Password = decPassword
+	repoUser.Password = v
 
 	return repoUser, nil
 }
@@ -76,12 +76,12 @@ func (c *Controller) UpdateUser(id uuid.UUID, form *model.UserForm) (*model.User
 	}
 
 	if form.Password != nil {
-		encPassword, err := pmcrypto.Encrypt(*form.Password, Salt)
+		v, err := pmcrypto.Encrypt(*form.Password, Salt)
 		if err != nil {
 			return nil, fmt.Errorf("encrypt: %w", err)
 		}
 
-		user.Password = encPassword
+		user.Password = v
 	}
 
 	return c.userRepo.Update(&user)

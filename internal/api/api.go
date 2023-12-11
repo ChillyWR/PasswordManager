@@ -76,37 +76,37 @@ func (api *API) Start() error {
 
 func (api *API) SetUserEndpoints(r *httprouter.Router) {
 	r.GET("/users",
-		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+		ContextSetter(api.ctx.logger, Authentication(api.ctx.logger,
 			Dispatch(NewListUsersHandler(api.ctx)))))
 	r.POST("/users",
 		ContextSetter(api.ctx.logger,
 			Dispatch(NewCreateUserHandler(api.ctx))))
 	r.GET(fmt.Sprintf("/users/:%s", IDPPN),
-		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+		ContextSetter(api.ctx.logger, Authentication(api.ctx.logger,
 			Dispatch(NewGetUserHandler(api.ctx)))))
 	r.PUT(fmt.Sprintf("/users/:%s", IDPPN),
-		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+		ContextSetter(api.ctx.logger, Authentication(api.ctx.logger,
 			Dispatch(NewUpdateUserHandler(api.ctx)))))
 	r.DELETE(fmt.Sprintf("/users/:%s", IDPPN),
-		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+		ContextSetter(api.ctx.logger, Authentication(api.ctx.logger,
 			Dispatch(NewDeleteUserHandler(api.ctx)))))
 }
 
 func (api *API) SetRecordEndpoints(r *httprouter.Router) {
 	r.GET("/records",
-		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+		ContextSetter(api.ctx.logger, Authentication(api.ctx.logger,
 			Dispatch(NewListRecordsHandler(api.ctx)))))
 	r.POST("/records",
-		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+		ContextSetter(api.ctx.logger, Authentication(api.ctx.logger,
 			Dispatch(NewCreateRecordHandler(api.ctx)))))
 	r.GET(fmt.Sprintf("/records/:%s", IDPPN),
-		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+		ContextSetter(api.ctx.logger, Authentication(api.ctx.logger,
 			Dispatch(NewGetRecordHandler(api.ctx)))))
 	r.PUT(fmt.Sprintf("/records/:%s", IDPPN),
-		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+		ContextSetter(api.ctx.logger, Authentication(api.ctx.logger,
 			Dispatch(NewUpdateRecordHandler(api.ctx)))))
 	r.DELETE(fmt.Sprintf("/records/:%s", IDPPN),
-		ContextSetter(api.ctx.logger, AuthorizationCheck(api.ctx.logger,
+		ContextSetter(api.ctx.logger, Authentication(api.ctx.logger,
 			Dispatch(NewDeleteRecordHandler(api.ctx)))))
 }
 
