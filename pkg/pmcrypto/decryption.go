@@ -19,9 +19,13 @@ func Decrypt(text, salt string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	cipherText := Decode(text)
+
 	cfb := cipher.NewCFBDecrypter(block, bytes)
+
 	plainText := make([]byte, len(cipherText))
 	cfb.XORKeyStream(plainText, cipherText)
+
 	return string(plainText), nil
 }

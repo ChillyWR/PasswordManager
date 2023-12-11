@@ -156,20 +156,25 @@ func (r IdentityRecord) ApplyForm(f *IdentityRecordForm) {
 // Forms are meant to be filled by user
 
 type CredentialRecordForm struct {
-	Name  *string `json:"name"`
+	Name  *string  `json:"name"`
 	Notes *string `json:"notes"`
 }
 
 func (f CredentialRecordForm) Validate() error {
-	if f.Name == nil || *f.Name == "" {
+	if f.Name != nil && *f.Name == "" {
 		return fmt.Errorf("%w: Name is empty", pmerror.ErrInvalidInput)
+	}
+
+	if f.Notes != nil && *f.Notes == "" {
+		return fmt.Errorf("%w: Notes is empty", pmerror.ErrInvalidInput)
 	}
 
 	return nil
 }
 
 func (f CredentialRecordForm) Empty() bool {
-	return f.Name == nil && f.Notes == nil
+	return (f.Name == nil || *f.Name == "") &&
+		(f.Notes == nil || *f.Notes == "")
 }
 
 type LoginRecordForm struct {
@@ -188,7 +193,9 @@ func (f LoginRecordForm) Validate() error {
 }
 
 func (f LoginRecordForm) Empty() bool {
-	return f.Username == nil && f.Password == nil && f.URL == nil
+	return (f.Username == nil || *f.Username == "") &&
+		(f.Password == nil || *f.Password == "") &&
+		(f.URL == nil || *f.URL == "")
 }
 
 type CardRecordForm struct {
@@ -209,7 +216,11 @@ func (f CardRecordForm) Validate() error {
 }
 
 func (f CardRecordForm) Empty() bool {
-	return f.Brand == nil && f.Number == nil && f.ExpirationMonth == nil && f.ExpirationYear == nil && f.CVV == nil
+	return (f.Brand == nil || *f.Brand == "") &&
+		(f.Number == nil || *f.Number == "") &&
+		(f.ExpirationMonth == nil || *f.ExpirationMonth == "") &&
+		(f.ExpirationYear == nil || *f.ExpirationYear == "") &&
+		(f.CVV == nil || *f.CVV == "")
 }
 
 type IdentityRecordForm struct {
@@ -233,5 +244,12 @@ func (f IdentityRecordForm) Validate() error {
 }
 
 func (f IdentityRecordForm) Empty() bool {
-	return f.FirstName == nil && f.MiddleName == nil && f.LastName == nil && f.Address == nil && f.Email == nil && f.PhoneNumber == nil && f.Country == nil
+	return (f.FirstName == nil || *f.FirstName == "") &&
+		(f.MiddleName == nil || *f.MiddleName == "") &&
+		(f.LastName == nil || *f.LastName == "") &&
+		(f.Address == nil || *f.Address == "") &&
+		(f.Email == nil || *f.Email == "") &&
+		(f.PhoneNumber == nil || *f.PhoneNumber == "") &&
+		(f.PassportNumber == nil || *f.PassportNumber == "") &&
+		(f.Country == nil || *f.Country == "")
 }

@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"github.com/okutsen/PasswordManager/model"
+	"github.com/okutsen/PasswordManager/pkg/pmerror"
 )
 
 type CredentialRecord model.CredentialRecord
@@ -270,8 +271,13 @@ func (r *RecordRepository) CreateIdentity(record *model.IdentityRecord) (*model.
 
 func (r *RecordRepository) UpdateCredentialRecord(record *model.CredentialRecord) (*model.CredentialRecord, error) {
 	credentialRecord := CredentialRecord(*record)
-	if err := r.db.Model(credentialRecord).Clauses(clause.Returning{}).Updates(credentialRecord).Error; err != nil {
-		return nil, fmt.Errorf("update: %w", convertError(err))
+	result := r.db.Model(credentialRecord).Clauses(clause.Returning{}).Updates(credentialRecord)
+	if result.Error != nil {
+		return nil, fmt.Errorf("update: %w", convertError(result.Error))
+	}
+
+	if result.RowsAffected == 0 {
+		return nil, pmerror.ErrNotFound
 	}
 
 	return record, nil
@@ -279,14 +285,24 @@ func (r *RecordRepository) UpdateCredentialRecord(record *model.CredentialRecord
 
 func (r *RecordRepository) UpdateLogin(record *model.LoginRecord) (*model.LoginRecord, error) {
 	core := CredentialRecord(record.CredentialRecord)
-	if err := r.db.Model(core).Clauses(clause.Returning{}).Updates(core).Error; err != nil {
-		return nil, fmt.Errorf("update core: %w", convertError(err))
+	result := r.db.Model(core).Clauses(clause.Returning{}).Updates(core)
+	if result.Error != nil {
+		return nil, fmt.Errorf("update core: %w", convertError(result.Error))
+	}
+
+	if result.RowsAffected == 0 {
+		return nil, pmerror.ErrNotFound
 	}
 
 	login := r.buildLogin(core.ID, record)
 
-	if err := r.db.Model(login).Clauses(clause.Returning{}).Updates(login).Error; err != nil {
-		return nil, fmt.Errorf("update login: %w", convertError(err))
+	result = r.db.Model(login).Clauses(clause.Returning{}).Updates(login)
+	if result.Error != nil {
+		return nil, fmt.Errorf("update login: %w", convertError(result.Error))
+	}
+
+	if result.RowsAffected == 0 {
+		return nil, pmerror.ErrNotFound
 	}
 
 	return record, nil
@@ -294,14 +310,24 @@ func (r *RecordRepository) UpdateLogin(record *model.LoginRecord) (*model.LoginR
 
 func (r *RecordRepository) UpdateCard(record *model.CardRecord) (*model.CardRecord, error) {
 	core := CredentialRecord(record.CredentialRecord)
-	if err := r.db.Model(core).Clauses(clause.Returning{}).Updates(core).Error; err != nil {
-		return nil, fmt.Errorf("update core: %w", convertError(err))
+	result := r.db.Model(core).Clauses(clause.Returning{}).Updates(core)
+	if result.Error != nil {
+		return nil, fmt.Errorf("update core: %w", convertError(result.Error))
+	}
+
+	if result.RowsAffected == 0 {
+		return nil, pmerror.ErrNotFound
 	}
 
 	card := r.buildCard(core.ID, record)
 
-	if err := r.db.Model(card).Clauses(clause.Returning{}).Updates(card).Error; err != nil {
-		return nil, fmt.Errorf("update card: %w", convertError(err))
+	result = r.db.Model(card).Clauses(clause.Returning{}).Updates(card)
+	if result.Error != nil {
+		return nil, fmt.Errorf("update card: %w", convertError(result.Error))
+	}
+
+	if result.RowsAffected == 0 {
+		return nil, pmerror.ErrNotFound
 	}
 
 	return record, nil
@@ -309,14 +335,24 @@ func (r *RecordRepository) UpdateCard(record *model.CardRecord) (*model.CardReco
 
 func (r *RecordRepository) UpdateIdentity(record *model.IdentityRecord) (*model.IdentityRecord, error) {
 	core := CredentialRecord(record.CredentialRecord)
-	if err := r.db.Model(core).Clauses(clause.Returning{}).Updates(core).Error; err != nil {
-		return nil, fmt.Errorf("update record: %w", convertError(err))
+	result := r.db.Model(core).Clauses(clause.Returning{}).Updates(core)
+	if result.Error != nil {
+		return nil, fmt.Errorf("update core: %w", convertError(result.Error))
+	}
+
+	if result.RowsAffected == 0 {
+		return nil, pmerror.ErrNotFound
 	}
 
 	identity := r.buildIdentity(core.ID, record)
 
-	if err := r.db.Model(identity).Clauses(clause.Returning{}).Updates(identity).Error; err != nil {
-		return nil, fmt.Errorf("update identity: %w", convertError(err))
+	result = r.db.Model(identity).Clauses(clause.Returning{}).Updates(identity)
+	if result.Error != nil {
+		return nil, fmt.Errorf("update card: %w", convertError(result.Error))
+	}
+
+	if result.RowsAffected == 0 {
+		return nil, pmerror.ErrNotFound
 	}
 
 	return record, nil
@@ -324,8 +360,13 @@ func (r *RecordRepository) UpdateIdentity(record *model.IdentityRecord) (*model.
 
 func (r *RecordRepository) Delete(id uuid.UUID) (*model.CredentialRecord, error) {
 	var record model.CredentialRecord
-	if err := r.db.Model(&record).Clauses(clause.Returning{}).Delete(&record, id).Error; err != nil {
-		return nil, fmt.Errorf("delete record: %w", convertError(err))
+	result := r.db.Clauses(clause.Returning{}).Where("id = ?", id).Delete(&record)
+	if result.Error != nil {
+		return nil, fmt.Errorf("delete: %w", convertError(result.Error))
+	}
+
+	if result.RowsAffected == 0 {
+		return nil, pmerror.ErrNotFound
 	}
 
 	return &record, nil

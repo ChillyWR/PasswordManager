@@ -45,7 +45,7 @@ func NewGetUserHandler(apictx *APIContext) http.HandlerFunc {
 			return
 		}
 
-		user, err := apictx.ctrl.User(userID)
+		user, err := apictx.ctrl.GetUser(userID)
 		if err != nil {
 			logger.Errorf("Failed to get user: %s", err.Error())
 			writeError(w, err, logger)

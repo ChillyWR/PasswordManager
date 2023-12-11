@@ -14,7 +14,7 @@ func (c *Controller) AllUsers() ([]model.User, error) {
 	return c.userRepo.GetAll()
 }
 
-func (c *Controller) User(id uuid.UUID) (*model.User, error) {
+func (c *Controller) GetUser(id uuid.UUID) (*model.User, error) {
 	repoUser, err := c.userRepo.Get(id)
 	if err != nil {
 		return nil, err

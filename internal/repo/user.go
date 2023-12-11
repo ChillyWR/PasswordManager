@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"github.com/okutsen/PasswordManager/model"
+	"github.com/okutsen/PasswordManager/pkg/pmerror"
 )
 
 type User model.User
@@ -32,7 +33,7 @@ type UserRepository struct {
 func (r *UserRepository) GetAll() ([]model.User, error) {
 	var user []model.User
 	if err := r.db.Find(&user).Error; err != nil {
-		return nil, fmt.Errorf("failed to get all user: %w", err)
+		return nil, fmt.Errorf("find: %w", convertError(err))
 	}
 
 	return user, nil
@@ -40,7 +41,7 @@ func (r *UserRepository) GetAll() ([]model.User, error) {
 func (r *UserRepository) Get(id uuid.UUID) (*model.User, error) {
 	var user model.User
 	if err := r.db.First(&user, id).Error; err != nil {
-		return nil, fmt.Errorf("failed to get user: %w", err)
+		return nil, fmt.Errorf("first: %w", convertError(err))
 	}
 
 	return &user, nil
@@ -49,26 +50,35 @@ func (r *UserRepository) Get(id uuid.UUID) (*model.User, error) {
 func (r *UserRepository) Create(user *model.User) (*model.User, error) {
 	core := User(*user)
 	if err := r.db.Create(&core).Error; err != nil {
-		return nil, fmt.Errorf("failed to create user: %w", err)
+		return nil, fmt.Errorf("create: %w", convertError(err))
 	}
 
-	user.ID = core.ID
-
-	return user, nil
+	return (*model.User)(&core), nil
 }
 
 func (r *UserRepository) Update(user *model.User) (*model.User, error) {
-	if err := r.db.Model(user).Clauses(clause.Returning{}).Updates(user).Error; err != nil {
-		return nil, fmt.Errorf("failed to update user: %w", err)
+	result := r.db.Model(user).Clauses(clause.Returning{}).Updates(user)
+	if result.Error != nil {
+		return nil, fmt.Errorf("updates: %w", convertError(result.Error))
+	}
+
+	if result.RowsAffected == 0 {
+		return nil, pmerror.ErrNotFound
 	}
 
 	return user, nil
 }
 
 func (r *UserRepository) Delete(id uuid.UUID) (*model.User, error) {
-	var user model.User
-	if err := r.db.Model(&user).Clauses(clause.Returning{}).Delete(&user, id).Error; err != nil {
-		return nil, fmt.Errorf("failed to remove user: %w", err)
+	var user User
+	result := r.db.Clauses(clause.Returning{}).Where("id = ?", id).Delete(&user)
+	if result.Error != nil {
+		return nil, fmt.Errorf("delete: %w", convertError(result.Error))
 	}
-	return &user, nil
+
+	if result.RowsAffected == 0 {
+		return nil, pmerror.ErrNotFound
+	}
+
+	return (*model.User)(&user), nil
 }

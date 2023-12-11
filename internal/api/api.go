@@ -24,7 +24,7 @@ type Controller interface {
 	DeleteRecord(id uuid.UUID, userID uuid.UUID) (*model.CredentialRecord, error)
 
 	AllUsers() ([]model.User, error)
-	User(id uuid.UUID) (*model.User, error)
+	GetUser(id uuid.UUID) (*model.User, error)
 	CreateUser(user *model.UserForm) (*model.User, error)
 	UpdateUser(id uuid.UUID, form *model.UserForm) (*model.User, error)
 	DeleteUser(id uuid.UUID) (*model.User, error)
