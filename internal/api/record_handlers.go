@@ -57,6 +57,7 @@ func NewGetRecordHandler(apictx *APIContext) http.HandlerFunc {
 			return
 		}
 
+		logger.Infof("Check auth for %v", rctx.userID)
 		result, err := apictx.ctrl.GetRecord(recordID, rctx.userID)
 		if err != nil {
 			logger.Errorf("Failed to get record: %s", err.Error())

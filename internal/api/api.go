@@ -23,6 +23,7 @@ type Controller interface {
 	UpdateRecord(id uuid.UUID, rawForm json.RawMessage, userID uuid.UUID) (interface{}, error)
 	DeleteRecord(id uuid.UUID, userID uuid.UUID) (*model.CredentialRecord, error)
 
+	Login(form *model.UserForm) (uuid.UUID, error)
 	AllUsers() ([]model.User, error)
 	GetUser(id uuid.UUID) (*model.User, error)
 	CreateUser(user *model.UserForm) (*model.User, error)
@@ -75,6 +76,9 @@ func (api *API) Start() error {
 }
 
 func (api *API) SetUserEndpoints(r *httprouter.Router) {
+	r.POST("/login",
+		ContextSetter(api.ctx.logger,
+			Dispatch(NewLoginHandler(api.ctx))))
 	r.GET("/users",
 		ContextSetter(api.ctx.logger, Authentication(api.ctx.logger,
 			Dispatch(NewListUsersHandler(api.ctx)))))
@@ -112,9 +116,6 @@ func (api *API) SetRecordEndpoints(r *httprouter.Router) {
 
 func (api *API) SetFunctionalEndpoints(r *httprouter.Router) {
 	spec := NewOpenAPIv3(api.config, api.ctx.logger)
-	r.GET("/authMePlease",
-		ContextSetter(api.ctx.logger,
-			Dispatch(NewFreeAccessHandler(api.ctx.logger))))
 	r.GET("/openapi3.json",
 		ContextSetter(api.ctx.logger,
 			Dispatch(NewJSONSpecHandler(api.ctx.logger, spec))))
@@ -151,25 +152,5 @@ func NewYAMLSpecHandler(parentLogger log.Logger, spec *openapi3.T) http.HandlerF
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-	}
-}
-
-func NewFreeAccessHandler(logger log.Logger) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		token, err := GenerateJWT(uuid.NewString())
-		if err != nil {
-			logger.Errorf("Failed to generate jwt: %s", err.Error())
-			writeResponse(w, Error{Message: "Oops, failed to generate your token"}, http.StatusInternalServerError, logger)
-		}
-
-		t := struct {
-			Message string `json:"message,omitempty"`
-			Token   string `json:"token"`
-		}{
-			Message: "Here, use this as Authorization header",
-			Token:   token,
-		}
-
-		writeResponse(w, &t, http.StatusOK, logger)
 	}
 }

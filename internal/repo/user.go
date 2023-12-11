@@ -38,13 +38,23 @@ func (r *UserRepository) GetAll() ([]model.User, error) {
 
 	return user, nil
 }
+
 func (r *UserRepository) Get(id uuid.UUID) (*model.User, error) {
-	var user model.User
+	var user User
 	if err := r.db.First(&user, id).Error; err != nil {
 		return nil, fmt.Errorf("first: %w", convertError(err))
 	}
 
-	return &user, nil
+	return (*model.User)(&user), nil
+}
+
+func (r *UserRepository) GetByName(name string) (*model.User, error) {
+	var user User
+	if err := r.db.First(&user, "name = ?", name).Error; err != nil {
+		return nil, fmt.Errorf("first: %w", convertError(err))
+	}
+
+	return (*model.User)(&user), nil
 }
 
 func (r *UserRepository) Create(user *model.User) (*model.User, error) {

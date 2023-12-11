@@ -42,6 +42,7 @@ func unpackRequestContext(ctx context.Context, logger log.Logger) *RequestContex
 	if !ok {
 		logger.Fatalf("Failed to unpack request context, got: %s", rctx)
 	}
+
 	return rctx
 }
 
@@ -51,6 +52,7 @@ func getIDFrom(ps httprouter.Params, logger log.Logger) (uuid.UUID, error) {
 	if idStr == "" {
 		logger.Fatal("Failed to get path parameter")
 	}
+
 	return uuid.Parse(idStr)
 }
 
@@ -60,7 +62,7 @@ func readBody(body io.ReadCloser, v any) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if err := json.Unmarshal(raw, v); err != nil {
 		return err
 	}

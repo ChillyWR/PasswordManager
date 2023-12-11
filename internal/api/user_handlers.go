@@ -7,6 +7,49 @@ import (
 	"github.com/okutsen/PasswordManager/model"
 )
 
+func NewLoginHandler(apictx *APIContext) http.HandlerFunc {
+	logger := apictx.logger.WithFields(log.Fields{
+		"handler": "ListUsers",
+	})
+	return func(w http.ResponseWriter, r *http.Request) {
+		rctx := unpackRequestContext(r.Context(), logger)
+		logger = logger.WithFields(log.Fields{
+			"cor_id": rctx.corID.String(),
+		})
+
+		var user model.UserForm
+		if err := readBody(r.Body, &user); err != nil {
+			logger.Errorf("Failed to read body: %s", err.Error())
+			writeResponse(w, Error{Message: InvalidJSONMessage}, http.StatusBadRequest, logger)
+			return
+		}
+
+		id, err := apictx.ctrl.Login(&user)
+		if err != nil {
+			logger.Errorf("Failed to login: %s", err.Error())
+			writeError(w, err, logger)
+			return
+		}
+
+		token, err := GenerateJWT(id.String())
+		if err != nil {
+			logger.Errorf("Failed to generate jwt: %s", err.Error())
+			writeResponse(w, Error{Message: "Oops, failed to generate your token"}, http.StatusInternalServerError, logger)
+			return
+		}
+
+		t := struct {
+			Message string `json:"message,omitempty"`
+			Token   string `json:"token"`
+		}{
+			Message: "Welcome, welcome, use this as Authorization header",
+			Token:   token,
+		}
+
+		writeResponse(w, t, http.StatusOK, logger)
+	}
+}
+
 func NewListUsersHandler(apictx *APIContext) http.HandlerFunc {
 	logger := apictx.logger.WithFields(log.Fields{
 		"handler": "ListUsers",

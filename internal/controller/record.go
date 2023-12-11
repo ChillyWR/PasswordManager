@@ -173,7 +173,7 @@ func (c *Controller) UpdateRecord(id uuid.UUID, rawForm json.RawMessage, userID 
 	}
 
 	switch record.(type) {
-	case model.CredentialRecord:
+	case *model.CredentialRecord:
 		var form model.CredentialRecordForm
 		if err := json.Unmarshal(rawForm, &form); err != nil {
 			return nil, fmt.Errorf("%w: unmarshal: %s", pmerror.ErrInvalidInput, err.Error())
@@ -195,7 +195,7 @@ func (c *Controller) UpdateRecord(id uuid.UUID, rawForm json.RawMessage, userID 
 		}
 
 		return c.recordRepo.UpdateCredentialRecord(&record)
-	case model.LoginRecord:
+	case *model.LoginRecord:
 		var form model.LoginRecordForm
 		if err := json.Unmarshal(rawForm, &form); err != nil {
 			return nil, fmt.Errorf("%w: unmarshal: %s", pmerror.ErrInvalidInput, err.Error())
@@ -219,7 +219,7 @@ func (c *Controller) UpdateRecord(id uuid.UUID, rawForm json.RawMessage, userID 
 		}
 
 		return c.recordRepo.UpdateLogin(&record)
-	case model.CardRecord:
+	case *model.CardRecord:
 		var form model.CardRecordForm
 		if err := json.Unmarshal(rawForm, &form); err != nil {
 			return nil, fmt.Errorf("%w: unmarshal: %s", pmerror.ErrInvalidInput, err.Error())
@@ -243,7 +243,7 @@ func (c *Controller) UpdateRecord(id uuid.UUID, rawForm json.RawMessage, userID 
 		}
 
 		return c.recordRepo.UpdateCard(&record)
-	case model.IdentityRecord:
+	case *model.IdentityRecord:
 		var form model.IdentityRecordForm
 		if err := json.Unmarshal(rawForm, &form); err != nil {
 			return nil, fmt.Errorf("%w: unmarshal: %s", pmerror.ErrInvalidInput, err.Error())
@@ -268,7 +268,7 @@ func (c *Controller) UpdateRecord(id uuid.UUID, rawForm json.RawMessage, userID 
 
 		return c.recordRepo.UpdateIdentity(&record)
 	default:
-		return nil, fmt.Errorf("%w: type assertion", pmerror.ErrInternal)
+		return nil, fmt.Errorf("%w: type assertion %T", pmerror.ErrInternal, record)
 	}
 }
 
@@ -286,7 +286,7 @@ func (c *Controller) authorizeRecord(id uuid.UUID, userID uuid.UUID) error {
 		return fmt.Errorf("get: %w", err)
 	}
 
-	if record.CreatedBy != userID {
+	if record.CreatedBy.String() != userID.String() {
 		return fmt.Errorf("%w: user %s does not own record %s", pmerror.ErrForbidden, userID.String(), id.String())
 	}
 

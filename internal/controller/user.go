@@ -5,10 +5,33 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/okutsen/PasswordManager/model"
 	"github.com/okutsen/PasswordManager/pkg/pmcrypto"
 	"github.com/okutsen/PasswordManager/pkg/pmerror"
 )
+
+func (c *Controller) Login(form *model.UserForm) (uuid.UUID, error) {
+	if err := form.Validate(); err != nil {
+		return uuid.UUID{}, fmt.Errorf("validate: %w", err)
+	}
+
+	user, err := c.userRepo.GetByName(*form.Name)
+	if err != nil {
+		return uuid.UUID{},fmt.Errorf("validate: %w", err)
+	}
+
+	decPassword, err := pmcrypto.Decrypt(user.Password, Salt)
+	if err != nil {
+		return uuid.UUID{},fmt.Errorf("decrypt: %w", err)
+	}
+
+	if *form.Password != decPassword {
+		return uuid.UUID{},fmt.Errorf("%w: password doesn't match", pmerror.ErrInvalidInput)
+	}
+
+	return user.ID, nil
+}
 
 func (c *Controller) AllUsers() ([]model.User, error) {
 	return c.userRepo.GetAll()

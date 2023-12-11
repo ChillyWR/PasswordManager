@@ -33,6 +33,7 @@ type RecordRepository interface {
 type UserRepository interface {
 	GetAll() ([]model.User, error)
 	Get(id uuid.UUID) (*model.User, error)
+	GetByName(name string) (*model.User, error)
 	Create(user *model.User) (*model.User, error)
 	Update(user *model.User) (*model.User, error)
 	Delete(id uuid.UUID) (*model.User, error)
