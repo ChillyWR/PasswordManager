@@ -106,7 +106,7 @@ func (api *API) SetRecordEndpoints(r *httprouter.Router) {
 	r.GET(fmt.Sprintf("/records/:%s", IDPPN),
 		ContextSetter(api.ctx.logger, Authentication(api.ctx.logger,
 			Dispatch(NewGetRecordHandler(api.ctx)))))
-	r.PUT(fmt.Sprintf("/records/:%s", IDPPN),
+	r.PATCH(fmt.Sprintf("/records/:%s", IDPPN),
 		ContextSetter(api.ctx.logger, Authentication(api.ctx.logger,
 			Dispatch(NewUpdateRecordHandler(api.ctx)))))
 	r.DELETE(fmt.Sprintf("/records/:%s", IDPPN),

@@ -14,14 +14,49 @@ func generateSchemas(logger log.Logger) openapi3.Schemas {
 	schemas := make(openapi3.Schemas)
 	gen := openapi3gen.NewGenerator()
 
+	UserRef, err := gen.NewSchemaRefForValue(&model.User{}, schemas)
+	if err != nil {
+		logger.Fatal("Failed to generate schema from User")
+	}
+
 	CredentialRecordRef, err := gen.NewSchemaRefForValue(&model.CredentialRecord{}, schemas)
 	if err != nil {
 		logger.Fatal("Failed to generate schema from CredentialRecord")
 	}
 
-	UserRef, err := gen.NewSchemaRefForValue(&model.User{}, schemas)
+	CredentialRecordFormRef, err := gen.NewSchemaRefForValue(&model.CredentialRecordForm{}, schemas)
 	if err != nil {
-		logger.Fatal("Failed to generate schema from User")
+		logger.Fatal("Failed to generate schema from CredentialRecordForm")
+	}
+
+	LoginRecordRef, err := gen.NewSchemaRefForValue(&model.LoginRecord{}, schemas)
+	if err != nil {
+		logger.Fatal("Failed to generate schema from LoginRecord")
+	}
+
+	LoginRecordFormRef, err := gen.NewSchemaRefForValue(&model.LoginRecordForm{}, schemas)
+	if err != nil {
+		logger.Fatal("Failed to generate schema from LoginRecordForm")
+	}
+
+	CardRecordRef, err := gen.NewSchemaRefForValue(&model.CardRecord{}, schemas)
+	if err != nil {
+		logger.Fatal("Failed to generate schema from CardRecord")
+	}
+
+	CardRecordFormRef, err := gen.NewSchemaRefForValue(&model.CardRecordForm{}, schemas)
+	if err != nil {
+		logger.Fatal("Failed to generate schema from CardRecordForm")
+	}
+
+	IdentityRecordRef, err := gen.NewSchemaRefForValue(&model.IdentityRecord{}, schemas)
+	if err != nil {
+		logger.Fatal("Failed to generate schema from IdentityRecord")
+	}
+
+	IdentityRecordFormRef, err := gen.NewSchemaRefForValue(&model.IdentityRecordForm{}, schemas)
+	if err != nil {
+		logger.Fatal("Failed to generate schema from IdentityRecordForm")
 	}
 
 	ErrorRef, err := gen.NewSchemaRefForValue(&Error{}, schemas)
@@ -30,9 +65,16 @@ func generateSchemas(logger log.Logger) openapi3.Schemas {
 	}
 
 	resultSchema := openapi3.Schemas{
-		"CredentialRecord": CredentialRecordRef,
-		"User":             UserRef,
-		"Error":            ErrorRef,
+		"User":                 UserRef,
+		"CredentialRecord":     CredentialRecordRef,
+		"CredentialRecordForm": CredentialRecordFormRef,
+		"LoginRecord":          LoginRecordRef,
+		"LoginRecordForm":      LoginRecordFormRef,
+		"CardRecord":           CardRecordRef,
+		"CardRecordForm":       CardRecordFormRef,
+		"IdentityRecord":       IdentityRecordRef,
+		"IdentityRecordForm":   IdentityRecordFormRef,
+		"Error":                ErrorRef,
 	}
 
 	return resultSchema
@@ -78,50 +120,84 @@ func NewOpenAPIv3(cfg *Config, logger log.Logger) *openapi3.T {
 		},
 		"AuthorizationTokenHPN": &openapi3.ParameterRef{
 			Value: openapi3.NewHeaderParameter(AuthorizationTokenHPN).
-				WithDescription("Correlation id").
+				WithDescription("JWT Token").
 				WithSchema(openapi3.NewUUIDSchema()),
 		},
 	}
 	spec.Components.RequestBodies = openapi3.RequestBodies{
 		"CreateRecordRequest": &openapi3.RequestBodyRef{
 			Value: openapi3.NewRequestBody().
-				WithDescription("Request used for creating a record.").
+				WithDescription("Record creation request body. Form should correspond to the record type.").
 				WithRequired(true).
-				WithJSONSchemaRef(&openapi3.SchemaRef{
-					Ref: "#/components/schemas/Record",
-				}),
+				WithJSONSchema(openapi3.NewObjectSchema().WithProperties(map[string]*openapi3.Schema{
+					"type": openapi3.NewStringSchema().WithEnum(
+						"secure_note",
+						"login",
+						"card",
+						"identity",
+					),
+					"form": openapi3.NewAnyOfSchema(
+						openapi3.NewSchemaRef("#/components/schemas/CredentialRecordForm", nil).Value,
+						openapi3.NewSchemaRef("#/components/schemas/LoginRecordForm", nil).Value,
+						openapi3.NewSchemaRef("#/components/schemas/CardRecordForm", nil).Value,
+						openapi3.NewSchemaRef("#/components/schemas/IdentityRecordForm", nil).Value,
+					),
+				})),
 		},
 		"UpdateRecordRequest": &openapi3.RequestBodyRef{
 			Value: openapi3.NewRequestBody().
-				WithDescription("Request used for updating a record.").
+				WithDescription("Request used for updating a record. Form should correspond to the record type. Fields of the form are optional, filled ones will be used to update record.").
 				WithRequired(true).
-				WithJSONSchemaRef(&openapi3.SchemaRef{
-					Ref: "#/components/schemas/Record",
-				}),
+				WithJSONSchema(openapi3.NewObjectSchema().WithProperties(map[string]*openapi3.Schema{
+					"type": openapi3.NewStringSchema().WithEnum(
+						"secure_note",
+						"login",
+						"card",
+						"identity",
+					),
+					"form": openapi3.NewAnyOfSchema(
+						openapi3.NewSchemaRef("#/components/schemas/CredentialRecordForm", nil).Value,
+						openapi3.NewSchemaRef("#/components/schemas/LoginRecordForm", nil).Value,
+						openapi3.NewSchemaRef("#/components/schemas/CardRecordForm", nil).Value,
+						openapi3.NewSchemaRef("#/components/schemas/IdentityRecordForm", nil).Value,
+					),
+				})),
 		},
 	}
 	spec.Components.Responses = openapi3.ResponseBodies{
 		"ListRecordsResponse": &openapi3.ResponseRef{
 			Value: openapi3.NewResponse().
-				WithDescription("Response returns back all records.").
-				WithJSONSchema(&openapi3.Schema{
-					Type:  openapi3.TypeArray,
-					Items: openapi3.NewSchemaRef("#/components/schemas/Record", nil),
-				}),
+				WithDescription("All user's records response.").
+				WithJSONSchema(openapi3.NewObjectSchema().WithProperties(map[string]*openapi3.Schema{
+					"secure_notes": openapi3.NewArraySchema().WithItems(
+						openapi3.NewSchemaRef("#/components/schemas/CredentialRecord", nil).Value),
+					"logins": openapi3.NewArraySchema().WithItems(
+						openapi3.NewSchemaRef("#/components/schemas/LoginRecord", nil).Value),
+					"card": openapi3.NewArraySchema().WithItems(
+						openapi3.NewSchemaRef("#/components/schemas/CardRecord", nil).Value),
+					"identity": openapi3.NewArraySchema().WithItems(
+						openapi3.NewSchemaRef("#/components/schemas/IdentityRecord", nil).Value),
+				})),
 		},
 		"RecordResponse": &openapi3.ResponseRef{
 			Value: openapi3.NewResponse().
-				WithDescription("Response returns back successfully found or created record.").
-				WithJSONSchemaRef(&openapi3.SchemaRef{
-					Ref: "#/components/schemas/Record",
-				}),
+				WithDescription("Record by id response.").
+				WithJSONSchema(openapi3.NewAnyOfSchema(
+					openapi3.NewSchemaRef("#/components/schemas/CredentialRecord", nil).Value,
+					openapi3.NewSchemaRef("#/components/schemas/LoginRecord", nil).Value,
+					openapi3.NewSchemaRef("#/components/schemas/CardRecord", nil).Value,
+					openapi3.NewSchemaRef("#/components/schemas/IdentityRecord", nil).Value,
+				)),
+		},
+		"RecordDeletionResponse": &openapi3.ResponseRef{
+			Value: openapi3.NewResponse().
+				WithDescription("Record by id response.").
+				WithJSONSchemaRef(openapi3.NewSchemaRef("#/components/schemas/CredentialRecord", nil)),
 		},
 		"ErrorResponse": &openapi3.ResponseRef{
 			Value: openapi3.NewResponse().
-				WithDescription("Response when errors happen.").
-				WithJSONSchemaRef(&openapi3.SchemaRef{
-					Ref: "#/components/schemas/Error",
-				}),
+				WithDescription("Error response.").
+				WithJSONSchemaRef(openapi3.NewSchemaRef("#/components/schemas/Error", nil)),
 		},
 	}
 
@@ -174,7 +250,7 @@ func NewOpenAPIv3(cfg *Config, logger log.Logger) *openapi3.T {
 					}),
 				),
 			},
-			Put: &openapi3.Operation{
+			Patch: &openapi3.Operation{
 				OperationID: "UpdateRecord",
 				Parameters: []*openapi3.ParameterRef{{
 					Ref: "#/components/parameters/IDPPN",
@@ -201,7 +277,7 @@ func NewOpenAPIv3(cfg *Config, logger log.Logger) *openapi3.T {
 				}},
 				Responses: openapi3.NewResponses(
 					openapi3.WithStatus(200, &openapi3.ResponseRef{
-						Value: openapi3.NewResponse().WithDescription("Record deleted"),
+						Ref: "#/components/responses/RecordDeletionResponse",
 					}),
 					openapi3.WithStatus(400, &openapi3.ResponseRef{
 						Ref: "#/components/responses/ErrorResponse",
