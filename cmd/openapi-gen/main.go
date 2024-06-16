@@ -6,9 +6,9 @@ import (
 	"os"
 	"path"
 
-	"github.com/okutsen/PasswordManager/config"
-	"github.com/okutsen/PasswordManager/internal/api"
-	"github.com/okutsen/PasswordManager/internal/log"
+	"github.com/ChillyWR/PasswordManager/config"
+	"github.com/ChillyWR/PasswordManager/internal/api"
+	"github.com/ChillyWR/PasswordManager/internal/log"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/invopop/yaml"

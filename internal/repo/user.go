@@ -8,8 +8,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/okutsen/PasswordManager/model"
-	"github.com/okutsen/PasswordManager/pkg/pmerror"
+	"github.com/ChillyWR/PasswordManager/model"
+	"github.com/ChillyWR/PasswordManager/pkg/pmerror"
 )
 
 type User model.User

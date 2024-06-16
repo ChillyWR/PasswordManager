@@ -12,14 +12,14 @@ import (
 	"github.com/invopop/yaml"
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/okutsen/PasswordManager/internal/log"
-	"github.com/okutsen/PasswordManager/model"
+	"github.com/ChillyWR/PasswordManager/internal/log"
+	"github.com/ChillyWR/PasswordManager/model"
 )
 
 type Controller interface {
 	AllRecords(userID uuid.UUID) ([]model.CredentialRecord, []model.LoginRecord, []model.CardRecord, []model.IdentityRecord, error)
 	GetRecord(id uuid.UUID, userID uuid.UUID) (interface{}, error)
-	CreateRecord(recordType string, record json.RawMessage, userID uuid.UUID) (interface{}, error)
+	CreateRecord(recordType model.RecordType, record json.RawMessage, userID uuid.UUID) (interface{}, error)
 	UpdateRecord(id uuid.UUID, rawForm json.RawMessage, userID uuid.UUID) (interface{}, error)
 	DeleteRecord(id uuid.UUID, userID uuid.UUID) (*model.CredentialRecord, error)
 

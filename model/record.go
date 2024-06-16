@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ChillyWR/PasswordManager/pkg/pmerror"
+	"github.com/ChillyWR/PasswordManager/pkg/pmtime"
 	"github.com/google/uuid"
-	"github.com/okutsen/PasswordManager/pkg/pmerror"
 )
 
 type RecordType string
@@ -22,8 +23,8 @@ func NewCredentialRecord(name string, notes *string, userID uuid.UUID) *Credenti
 		ID:        uuid.New(),
 		Name:      name,
 		Notes:     notes,
-		CreatedOn: time.Now().UTC(),
-		UpdatedOn: time.Now().UTC(),
+		CreatedOn: pmtime.TruncateToMillisecond(time.Now().UTC()),
+		UpdatedOn: pmtime.TruncateToMillisecond(time.Now().UTC()),
 		CreatedBy: userID,
 		UpdatedBy: userID,
 	}
@@ -33,8 +34,8 @@ type CredentialRecord struct {
 	ID        uuid.UUID `json:"id"`
 	Name      string    `json:"name"`
 	Notes     *string   `json:"notes"`
-	CreatedOn time.Time `json:"created_at"`
-	UpdatedOn time.Time `json:"updated_at"`
+	CreatedOn time.Time `json:"created_on"`
+	UpdatedOn time.Time `json:"updated_on"`
 	UpdatedBy uuid.UUID `json:"updated_by"`
 	CreatedBy uuid.UUID `json:"created_by"`
 }
@@ -156,7 +157,7 @@ func (r IdentityRecord) ApplyForm(f *IdentityRecordForm) {
 // Forms are meant to be filled by user
 
 type CredentialRecordForm struct {
-	Name  *string  `json:"name"`
+	Name  *string `json:"name"`
 	Notes *string `json:"notes"`
 }
 

@@ -6,9 +6,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/okutsen/PasswordManager/model"
-	"github.com/okutsen/PasswordManager/pkg/pmcrypto"
-	"github.com/okutsen/PasswordManager/pkg/pmerror"
+	"github.com/ChillyWR/PasswordManager/model"
+	"github.com/ChillyWR/PasswordManager/pkg/pmcrypto"
+	"github.com/ChillyWR/PasswordManager/pkg/pmerror"
+	"github.com/ChillyWR/PasswordManager/pkg/pmtime"
 )
 
 func (c *Controller) Login(form *model.UserForm) (uuid.UUID, error) {
@@ -18,16 +19,16 @@ func (c *Controller) Login(form *model.UserForm) (uuid.UUID, error) {
 
 	user, err := c.userRepo.GetByName(*form.Name)
 	if err != nil {
-		return uuid.UUID{},fmt.Errorf("validate: %w", err)
+		return uuid.UUID{}, fmt.Errorf("validate: %w", err)
 	}
 
 	decPassword, err := pmcrypto.Decrypt(user.Password, Salt)
 	if err != nil {
-		return uuid.UUID{},fmt.Errorf("decrypt: %w", err)
+		return uuid.UUID{}, fmt.Errorf("decrypt: %w", err)
 	}
 
 	if *form.Password != decPassword {
-		return uuid.UUID{},fmt.Errorf("%w: password doesn't match", pmerror.ErrInvalidInput)
+		return uuid.UUID{}, fmt.Errorf("%w: password doesn't match", pmerror.ErrInvalidInput)
 	}
 
 	return user.ID, nil
@@ -67,8 +68,8 @@ func (c *Controller) CreateUser(form *model.UserForm) (*model.User, error) {
 		ID:        uuid.New(),
 		Name:      *form.Name,
 		Password:  encPassword,
-		CreatedOn: time.Now().UTC(),
-		UpdatedOn: time.Now().UTC(),
+		CreatedOn: pmtime.TruncateToMillisecond(time.Now().UTC()),
+		UpdatedOn: pmtime.TruncateToMillisecond(time.Now().UTC()),
 	}
 
 	result, err := c.userRepo.Create(&user)
@@ -91,7 +92,7 @@ func (c *Controller) UpdateUser(id uuid.UUID, form *model.UserForm) (*model.User
 
 	user := model.User{
 		ID:        id,
-		UpdatedOn: time.Now().UTC(),
+		UpdatedOn: pmtime.TruncateToMillisecond(time.Now().UTC()),
 	}
 
 	if form.Name != nil {

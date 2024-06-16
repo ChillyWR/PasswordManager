@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/okutsen/PasswordManager/pkg/pmerror"
+	"github.com/ChillyWR/PasswordManager/pkg/pmerror"
 )
 
 type User struct {

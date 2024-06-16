@@ -8,8 +8,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/okutsen/PasswordManager/model"
-	"github.com/okutsen/PasswordManager/pkg/pmerror"
+	"github.com/ChillyWR/PasswordManager/model"
+	"github.com/ChillyWR/PasswordManager/pkg/pmerror"
 )
 
 type CredentialRecord model.CredentialRecord
@@ -72,26 +72,26 @@ type RecordRepository struct {
 
 func (r *RecordRepository) GetAll(userID uuid.UUID) ([]model.CredentialRecord, []model.LoginRecord, []model.CardRecord, []model.IdentityRecord, error) {
 	var credentialRecords []CredentialRecord
-	if err := r.db.Where("created_by = ?", userID).Find(&credentialRecords).Error; err != nil {
+	if err := r.db.Where("created_by = ?", userID).Order("created_on, name, id").Find(&credentialRecords).Error; err != nil {
 		return nil, nil, nil, nil, fmt.Errorf("get credential records: %w", convertError(err))
 	}
 
 	var loginRecords []LoginRecord
-	if err := r.db.Model(&LoginRecord{}).
+	if err := r.db.Model(&LoginRecord{}).Order("created_on, name, id").
 		Joins("INNER JOIN credential_record cd ON cd.id = login.id AND cd.created_by = ?", userID).
 		Scan(&loginRecords).Error; err != nil {
 		return nil, nil, nil, nil, fmt.Errorf("get logins: %w", convertError(err))
 	}
 
 	var cardRecords []CardRecord
-	if err := r.db.Model(&CardRecord{}).
+	if err := r.db.Model(&CardRecord{}).Order("created_on, name, id").
 		Joins("INNER JOIN credential_record cd ON cd.id = card.id AND cd.created_by = ?", userID).
 		Scan(&cardRecords).Error; err != nil {
 		return nil, nil, nil, nil, fmt.Errorf("get cards: %w", convertError(err))
 	}
 
 	var identityRecords []IdentityRecord
-	if err := r.db.Model(&IdentityRecord{}).
+	if err := r.db.Model(&IdentityRecord{}).Order("created_on, name, id").
 		Joins("INNER JOIN credential_record cd ON cd.id = identity.id AND cd.created_by = ?", userID).
 		Scan(&identityRecords).Error; err != nil {
 		return nil, nil, nil, nil, fmt.Errorf("get identities: %w", convertError(err))
@@ -145,9 +145,12 @@ func (r *RecordRepository) GetAll(userID uuid.UUID) ([]model.CredentialRecord, [
 		delete(core, record.ID)
 	}
 
-	secureNotes := make([]model.CredentialRecord, len(core))
-	for _, record := range core {
-		secureNotes = append(secureNotes, model.CredentialRecord(record))
+	secureNotes := make([]model.CredentialRecord, 0, len(core))
+	// preserve order
+	for _, record := range credentialRecords {
+		if _, ok := core[record.ID]; ok {
+			secureNotes = append(secureNotes, model.CredentialRecord(record))
+		}
 	}
 
 	return secureNotes, logins, cards, identities, nil

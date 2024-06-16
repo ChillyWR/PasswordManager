@@ -3,8 +3,8 @@ package api
 import (
 	"net/http"
 
-	"github.com/okutsen/PasswordManager/internal/log"
-	"github.com/okutsen/PasswordManager/model"
+	"github.com/ChillyWR/PasswordManager/internal/log"
+	"github.com/ChillyWR/PasswordManager/model"
 )
 
 func NewLoginHandler(apictx *APIContext) http.HandlerFunc {
@@ -130,14 +130,14 @@ func NewCreateUserHandler(apictx *APIContext) http.HandlerFunc {
 			return
 		}
 
-		response := struct{
-			User *model.User
+		response := struct {
+			User  *model.User
 			Token string
-		} {
-			User: result,
+		}{
+			User:  result,
 			Token: token,
 		}
-		
+
 		writeResponse(w, response, http.StatusCreated, logger)
 	}
 }

@@ -3,8 +3,8 @@ package controller
 import (
 	"fmt"
 
-	"github.com/okutsen/PasswordManager/model"
-	"github.com/okutsen/PasswordManager/pkg/pmcrypto"
+	"github.com/ChillyWR/PasswordManager/model"
+	"github.com/ChillyWR/PasswordManager/pkg/pmcrypto"
 )
 
 func (c *Controller) encryptCredentialRecord(record *model.CredentialRecord) error {

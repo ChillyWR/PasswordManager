@@ -58,9 +58,9 @@ components:
                         $ref: "#/components/schemas/Record"
             description: Response returns back successfully found or created record.
     schemas:
-        CredentialRecord:
+        Record:
             properties:
-                created_at:
+                created_on:
                     format: date-time
                     type: string
                 created_by: {}
@@ -69,7 +69,7 @@ components:
                     type: string
                 notes:
                     type: string
-                updated_at:
+                updated_on:
                     format: date-time
                     type: string
                 updated_by: {}
@@ -100,7 +100,7 @@ components:
             type: http
 info:
     contact:
-        url: https://github.com/okutsen/PasswordManager
+        url: https://github.com/ChillyWR/PasswordManager
     title: Password Manager
     version: 0.0.0
 openapi: 3.0.0

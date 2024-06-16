@@ -8,11 +8,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/okutsen/PasswordManager/config"
-	"github.com/okutsen/PasswordManager/internal/api"
-	"github.com/okutsen/PasswordManager/internal/controller"
-	"github.com/okutsen/PasswordManager/internal/log"
-	"github.com/okutsen/PasswordManager/internal/repo"
+	"github.com/ChillyWR/PasswordManager/config"
+	"github.com/ChillyWR/PasswordManager/internal/api"
+	"github.com/ChillyWR/PasswordManager/internal/controller"
+	"github.com/ChillyWR/PasswordManager/internal/log"
+	"github.com/ChillyWR/PasswordManager/internal/repo"
 )
 
 func main() {
@@ -71,8 +71,7 @@ func main() {
 	osCall := <-osSignals
 	logger.Infof("system call: %v", osCall)
 
-	err = repo.CloseConnection(db)
-	if err != nil {
+	if repo.CloseConnection(db) != nil {
 		logger.Errorf("Failed to close DB: %s", err.Error())
 	}
 

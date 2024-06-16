@@ -6,8 +6,8 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3gen"
 
-	"github.com/okutsen/PasswordManager/internal/log"
-	"github.com/okutsen/PasswordManager/model"
+	"github.com/ChillyWR/PasswordManager/internal/log"
+	"github.com/ChillyWR/PasswordManager/model"
 )
 
 func generateSchemas(logger log.Logger) openapi3.Schemas {
@@ -89,7 +89,7 @@ func NewOpenAPIv3(cfg *Config, logger log.Logger) *openapi3.T {
 			Description: "",
 			Version:     "0.0.0",
 			Contact: &openapi3.Contact{
-				URL: "https://github.com/okutsen/PasswordManager",
+				URL: "https://github.com/ChillyWR/PasswordManager",
 			},
 		},
 		Servers: openapi3.Servers{

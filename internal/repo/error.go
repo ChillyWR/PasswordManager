@@ -3,7 +3,7 @@ package repo
 import (
 	"fmt"
 
-	"github.com/okutsen/PasswordManager/pkg/pmerror"
+	"github.com/ChillyWR/PasswordManager/pkg/pmerror"
 	"gorm.io/gorm"
 )
 

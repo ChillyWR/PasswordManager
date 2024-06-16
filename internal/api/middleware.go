@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/okutsen/PasswordManager/internal/log"
+	"github.com/ChillyWR/PasswordManager/internal/log"
 )
 
 // ContextSetter reads header, creates RequestContext and adds it to r.Context

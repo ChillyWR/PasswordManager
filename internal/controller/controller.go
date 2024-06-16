@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/okutsen/PasswordManager/internal/log"
-	"github.com/okutsen/PasswordManager/model"
+	"github.com/ChillyWR/PasswordManager/internal/log"
+	"github.com/ChillyWR/PasswordManager/model"
 )
 
 const (

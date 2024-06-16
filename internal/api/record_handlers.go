@@ -5,8 +5,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/okutsen/PasswordManager/internal/log"
-	"github.com/okutsen/PasswordManager/model"
+	"github.com/ChillyWR/PasswordManager/internal/log"
+	"github.com/ChillyWR/PasswordManager/model"
 )
 
 func NewListRecordsHandler(apictx *APIContext) http.HandlerFunc {
@@ -52,7 +52,7 @@ func NewGetRecordHandler(apictx *APIContext) http.HandlerFunc {
 
 		recordID, err := getIDFrom(rctx.params, logger)
 		if err != nil {
-			logger.Errorf("Invalid record id: %s", err.Error())
+			logger.Errorf("%s: %s", InvalidRecordIDMessage, err.Error())
 			writeResponse(w, Error{Message: InvalidRecordIDMessage}, http.StatusBadRequest, logger)
 			return
 		}
@@ -89,7 +89,7 @@ func NewCreateRecordHandler(apictx *APIContext) http.HandlerFunc {
 			return
 		}
 
-		result, err := apictx.ctrl.CreateRecord(payload.Type, payload.Form, rctx.userID)
+		result, err := apictx.ctrl.CreateRecord(model.RecordType(payload.Type), payload.Form, rctx.userID)
 		if err != nil {
 			logger.Errorf("Failed to create record: %s", err.Error())
 			writeError(w, err, logger)
@@ -112,7 +112,7 @@ func NewUpdateRecordHandler(apictx *APIContext) http.HandlerFunc {
 
 		recordID, err := getIDFrom(rctx.params, logger)
 		if err != nil {
-			logger.Errorf("Invalid record id: %s", err.Error())
+			logger.Errorf("%s: %s", InvalidRecordIDMessage, err.Error())
 			writeResponse(w, Error{Message: InvalidRecordIDMessage}, http.StatusBadRequest, logger)
 			return
 		}
@@ -148,7 +148,7 @@ func NewDeleteRecordHandler(apictx *APIContext) http.HandlerFunc {
 
 		recordID, err := getIDFrom(rctx.params, logger)
 		if err != nil {
-			logger.Warnf("Invalid record id: %s", err.Error())
+			logger.Warnf("%s: %s", InvalidRecordIDMessage, err.Error())
 			writeResponse(w, Error{Message: InvalidRecordIDMessage}, http.StatusBadRequest, logger)
 			return
 		}

@@ -7,8 +7,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/okutsen/PasswordManager/model"
-	"github.com/okutsen/PasswordManager/pkg/pmerror"
+
+	"github.com/ChillyWR/PasswordManager/model"
+	"github.com/ChillyWR/PasswordManager/pkg/pmerror"
+	"github.com/ChillyWR/PasswordManager/pkg/pmtime"
 )
 
 func (c *Controller) AllRecords(userID uuid.UUID) ([]model.CredentialRecord, []model.LoginRecord, []model.CardRecord, []model.IdentityRecord, error) {
@@ -32,7 +34,7 @@ func (c *Controller) GetRecord(id uuid.UUID, userID uuid.UUID) (interface{}, err
 		}
 
 		return login, nil
-	} else if err != nil && !errors.Is(err, pmerror.ErrNotFound) {
+	} else if !errors.Is(err, pmerror.ErrNotFound) {
 		return nil, fmt.Errorf("get login: %w", err)
 	}
 
@@ -43,7 +45,7 @@ func (c *Controller) GetRecord(id uuid.UUID, userID uuid.UUID) (interface{}, err
 		}
 
 		return card, nil
-	} else if err != nil && !errors.Is(err, pmerror.ErrNotFound) {
+	} else if !errors.Is(err, pmerror.ErrNotFound) {
 		return nil, fmt.Errorf("get card: %w", err)
 	}
 
@@ -54,7 +56,7 @@ func (c *Controller) GetRecord(id uuid.UUID, userID uuid.UUID) (interface{}, err
 		}
 
 		return identity, nil
-	} else if err != nil && !errors.Is(err, pmerror.ErrNotFound) {
+	} else if !errors.Is(err, pmerror.ErrNotFound) {
 		return nil, fmt.Errorf("get identity: %w", err)
 	}
 
@@ -65,8 +67,8 @@ func (c *Controller) GetRecord(id uuid.UUID, userID uuid.UUID) (interface{}, err
 	return credentialRecord, nil
 }
 
-func (c *Controller) CreateRecord(recordType string, rawForm json.RawMessage, userID uuid.UUID) (interface{}, error) {
-	switch model.RecordType(recordType) {
+func (c *Controller) CreateRecord(recordType model.RecordType, rawForm json.RawMessage, userID uuid.UUID) (interface{}, error) {
+	switch recordType {
 	case model.SecureNoteRecordType:
 		var form model.CredentialRecordForm
 		if err := json.Unmarshal(rawForm, &form); err != nil {
@@ -185,7 +187,7 @@ func (c *Controller) UpdateRecord(id uuid.UUID, rawForm json.RawMessage, userID 
 
 		record := model.CredentialRecord{
 			ID:        id,
-			UpdatedOn: time.Now().UTC(),
+			UpdatedOn: pmtime.TruncateToMillisecond(time.Now().UTC()),
 			UpdatedBy: userID,
 		}
 		record.ApplyForm(&form)
@@ -208,7 +210,7 @@ func (c *Controller) UpdateRecord(id uuid.UUID, rawForm json.RawMessage, userID 
 		record := model.LoginRecord{
 			CredentialRecord: model.CredentialRecord{
 				ID:        id,
-				UpdatedOn: time.Now().UTC(),
+				UpdatedOn: pmtime.TruncateToMillisecond(time.Now().UTC()),
 				UpdatedBy: userID,
 			},
 		}
@@ -232,7 +234,7 @@ func (c *Controller) UpdateRecord(id uuid.UUID, rawForm json.RawMessage, userID 
 		record := model.CardRecord{
 			CredentialRecord: model.CredentialRecord{
 				ID:        id,
-				UpdatedOn: time.Now().UTC(),
+				UpdatedOn: pmtime.TruncateToMillisecond(time.Now().UTC()),
 				UpdatedBy: userID,
 			},
 		}
@@ -256,7 +258,7 @@ func (c *Controller) UpdateRecord(id uuid.UUID, rawForm json.RawMessage, userID 
 		record := model.IdentityRecord{
 			CredentialRecord: model.CredentialRecord{
 				ID:        id,
-				UpdatedOn: time.Now().UTC(),
+				UpdatedOn: pmtime.TruncateToMillisecond(time.Now().UTC()),
 				UpdatedBy: userID,
 			},
 		}

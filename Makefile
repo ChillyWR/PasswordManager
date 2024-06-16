@@ -9,46 +9,43 @@ MIGRATIONS_PATH=./internal/repo/migrations
 .DEFAULT_GOAL := help
 export PM_SERVER_PORT=${PORT}
 
-dependencies: ## Update dependencies
-	go mod vendor
-
 build: ## Make build of the project
 	GOARCH=amd64 GOOS=darwin go build -o ${TARGET} ${MAIN_PATH}
 
 run: ## Run the project
 	${TARGET_PATH}/${NAME}
 
-docker_build: ## Create an image in docker
+docker-build: ## Create an image in docker
 	docker build -t ${DOCKER_NAME} ./
 
-docker_run: ## Run container
+docker-run: ## Run container
 	docker run -p ${PORT}:${PORT} --name="${DOCKER_NAME}" ${DOCKER_NAME}
 
-docker_start: docker_build docker_run ## Create an image in docker and run a container
+docker-start: docker-build docker-run ## Create an image in docker and run a container
 
-docker_stop: ## Delete an image and container with name "password-manager"
+docker-stop: ## Delete an image and container with name "password-manager"
 	docker stop ${DOCKER_NAME}; docker rm ${DOCKER_NAME}; docker rmi -f ${DOCKER_NAME}
 
-compose_up: ## Start all the services from docker-compose file in detached mode
+compose-up: ## Start all the services from docker-compose file in detached mode
 	docker-compose up -d
 
-compose_stop: ## Drop all the services from docker-compose file
+compose-stop: ## Drop all the services from docker-compose file
 	docker-compose down
 
-delete_docker_image: ## Deletes an image of your program
+delete-docker-image: ## Deletes an image of your program
 	docker image rmi ${DOCKER_NAME}
 
-compose_down: compose_stop delete_docker_image
+compose-down: compose-stop delete-docker-image
 
-up: dependencies build run ## Update dependencies, build the project and run it
+up: build run ## Build and run the project
 
-migration_up: ## Up migrates
+migration-up: ## Up migrates
 	migrate -path ${MIGRATIONS_PATH} -database ${DB_CONNECTION} up
 
-migration_down: ## Drop migrates
+migration-down: ## Drop migrates
 	migrate -path ${MIGRATIONS_PATH} -database ${DB_CONNECTION} down
 
-db_connect: ## Open postgres container and connect to DB
+db-connect: ## Open postgres container and connect to DB
 	docker exec -it postgres psql ${DB_CONNECTION}
 
 clean:
@@ -58,4 +55,4 @@ clean:
 help: ## Display this help screen
 	@grep -E -h '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: dependencies build run docker_build docker_run docker_start docker_stop up migration_down migration_up db_connect
+.PHONY: build run docker-build docker-run docker-start docker-stop up migration-down migration-up db-connect
