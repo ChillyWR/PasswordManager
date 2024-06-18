@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/ChillyWR/PasswordManager/internal/log"
+	pmlogger "github.com/ChillyWR/PasswordManager/internal/logger"
 	"github.com/ChillyWR/PasswordManager/model"
 )
 
@@ -42,10 +42,10 @@ type UserRepository interface {
 type Controller struct {
 	userRepo   UserRepository
 	recordRepo RecordRepository
-	log        log.Logger
+	log        pmlogger.Logger
 }
 
-func New(userRepo UserRepository, recordRepo RecordRepository, logger log.Logger) (*Controller, error) {
+func New(userRepo UserRepository, recordRepo RecordRepository, logger pmlogger.Logger) (*Controller, error) {
 	if userRepo == nil {
 		return nil, errors.New("userRepo is nil")
 	}
@@ -57,6 +57,6 @@ func New(userRepo UserRepository, recordRepo RecordRepository, logger log.Logger
 	return &Controller{
 		userRepo:   userRepo,
 		recordRepo: recordRepo,
-		log:        logger.WithFields(log.Fields{"module": "Controller"}),
+		log:        logger.WithFields(pmlogger.Fields{"module": "Controller"}),
 	}, nil
 }

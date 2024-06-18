@@ -5,15 +5,14 @@ import (
 	"errors"
 	"net/http"
 
+	pmlogger "github.com/ChillyWR/PasswordManager/internal/logger"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
-
-	"github.com/ChillyWR/PasswordManager/internal/log"
 )
 
 // ContextSetter reads header, creates RequestContext and adds it to r.Context
-func ContextSetter(logger log.Logger, next httprouter.Handle) httprouter.Handle {
+func ContextSetter(logger pmlogger.Logger, next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		corIDStr := r.Header.Get(CorrelationIDHPN)
 
@@ -33,7 +32,7 @@ func ContextSetter(logger log.Logger, next httprouter.Handle) httprouter.Handle 
 	}
 }
 
-func Authentication(logger log.Logger, next httprouter.Handle) httprouter.Handle {
+func Authentication(logger pmlogger.Logger, next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		tokenStr := r.Header.Get(AuthorizationTokenHPN)
 		if tokenStr == "" {

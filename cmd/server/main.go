@@ -11,12 +11,12 @@ import (
 	"github.com/ChillyWR/PasswordManager/config"
 	"github.com/ChillyWR/PasswordManager/internal/api"
 	"github.com/ChillyWR/PasswordManager/internal/controller"
-	"github.com/ChillyWR/PasswordManager/internal/log"
+	pmlogger "github.com/ChillyWR/PasswordManager/internal/logger"
 	"github.com/ChillyWR/PasswordManager/internal/repo"
 )
 
 func main() {
-	logger := log.New()
+	logger := pmlogger.New()
 	config, err := config.New()
 	if err != nil {
 		logger.Fatalf("failed to initialize config: %s", err.Error())

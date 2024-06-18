@@ -5,17 +5,17 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/ChillyWR/PasswordManager/internal/log"
+	pmlogger "github.com/ChillyWR/PasswordManager/internal/logger"
 	"github.com/ChillyWR/PasswordManager/model"
 )
 
 func NewListRecordsHandler(apictx *APIContext) http.HandlerFunc {
-	logger := apictx.logger.WithFields(log.Fields{
+	logger := apictx.logger.WithFields(pmlogger.Fields{
 		"handler": "ListRecords",
 	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		rctx := unpackRequestContext(r.Context(), logger)
-		logger = logger.WithFields(log.Fields{
+		logger = logger.WithFields(pmlogger.Fields{
 			"cor_id": rctx.corID.String(),
 		})
 
@@ -41,12 +41,12 @@ func NewListRecordsHandler(apictx *APIContext) http.HandlerFunc {
 }
 
 func NewGetRecordHandler(apictx *APIContext) http.HandlerFunc {
-	logger := apictx.logger.WithFields(log.Fields{
+	logger := apictx.logger.WithFields(pmlogger.Fields{
 		"handler": "GetRecord",
 	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		rctx := unpackRequestContext(r.Context(), logger)
-		logger = logger.WithFields(log.Fields{
+		logger = logger.WithFields(pmlogger.Fields{
 			"cor_id": rctx.corID.String(),
 		})
 
@@ -70,12 +70,12 @@ func NewGetRecordHandler(apictx *APIContext) http.HandlerFunc {
 }
 
 func NewCreateRecordHandler(apictx *APIContext) http.HandlerFunc {
-	logger := apictx.logger.WithFields(log.Fields{
+	logger := apictx.logger.WithFields(pmlogger.Fields{
 		"handler": "CreateRecord",
 	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		rctx := unpackRequestContext(r.Context(), logger)
-		logger = logger.WithFields(log.Fields{
+		logger = logger.WithFields(pmlogger.Fields{
 			"cor_id": rctx.corID.String(),
 		})
 
@@ -101,12 +101,12 @@ func NewCreateRecordHandler(apictx *APIContext) http.HandlerFunc {
 }
 
 func NewUpdateRecordHandler(apictx *APIContext) http.HandlerFunc {
-	logger := apictx.logger.WithFields(log.Fields{
+	logger := apictx.logger.WithFields(pmlogger.Fields{
 		"handler": "UpdateRecord",
 	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		rctx := unpackRequestContext(r.Context(), logger)
-		logger = logger.WithFields(log.Fields{
+		logger = logger.WithFields(pmlogger.Fields{
 			"cor_id": rctx.corID.String(),
 		})
 
@@ -137,12 +137,12 @@ func NewUpdateRecordHandler(apictx *APIContext) http.HandlerFunc {
 }
 
 func NewDeleteRecordHandler(apictx *APIContext) http.HandlerFunc {
-	logger := apictx.logger.WithFields(log.Fields{
+	logger := apictx.logger.WithFields(pmlogger.Fields{
 		"handler": "DeleteRecord",
 	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		rctx := unpackRequestContext(r.Context(), logger)
-		logger = logger.WithFields(log.Fields{
+		logger = logger.WithFields(pmlogger.Fields{
 			"cor_id": rctx.corID.String(),
 		})
 

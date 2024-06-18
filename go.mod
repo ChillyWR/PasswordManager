@@ -1,6 +1,6 @@
 module github.com/ChillyWR/PasswordManager
 
-go 1.21
+go 1.22
 
 require (
 	github.com/getkin/kin-openapi v0.122.0
@@ -11,6 +11,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
+	go.uber.org/mock v0.4.0
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.10
 )

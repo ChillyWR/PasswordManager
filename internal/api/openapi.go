@@ -6,11 +6,11 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3gen"
 
-	"github.com/ChillyWR/PasswordManager/internal/log"
+	pmlogger "github.com/ChillyWR/PasswordManager/internal/logger"
 	"github.com/ChillyWR/PasswordManager/model"
 )
 
-func generateSchemas(logger log.Logger) openapi3.Schemas {
+func generateSchemas(logger pmlogger.Logger) openapi3.Schemas {
 	schemas := make(openapi3.Schemas)
 	gen := openapi3gen.NewGenerator()
 
@@ -81,7 +81,7 @@ func generateSchemas(logger log.Logger) openapi3.Schemas {
 }
 
 // NewOpenAPIv3 instantiates the OpenAPI specification
-func NewOpenAPIv3(cfg *Config, logger log.Logger) *openapi3.T {
+func NewOpenAPIv3(cfg *Config, logger pmlogger.Logger) *openapi3.T {
 	spec := openapi3.T{
 		OpenAPI: "3.0.0",
 		Info: &openapi3.Info{

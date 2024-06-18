@@ -1,4 +1,4 @@
-package log
+package logger
 
 type Logger interface {
 	Info(args ...any)
@@ -13,4 +13,5 @@ type Logger interface {
 	Debugf(format string, v ...any)
 	WithFields(fields Fields) Logger
 }
+
 type Fields map[string]any

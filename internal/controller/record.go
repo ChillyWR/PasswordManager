@@ -283,6 +283,7 @@ func (c *Controller) DeleteRecord(id uuid.UUID, userID uuid.UUID) (*model.Creden
 }
 
 func (c *Controller) authorizeRecord(id uuid.UUID, userID uuid.UUID) error {
+	// TODO: authorize in db with "isOwner" check
 	record, err := c.recordRepo.GetCredentialRecord(id)
 	if err != nil {
 		return fmt.Errorf("get: %w", err)

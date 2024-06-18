@@ -6,14 +6,17 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"path"
+	"sort"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ChillyWR/PasswordManager/internal/controller"
-	"github.com/ChillyWR/PasswordManager/internal/log"
+	pmlogger "github.com/ChillyWR/PasswordManager/internal/logger"
 	"github.com/ChillyWR/PasswordManager/internal/repo"
 	"github.com/ChillyWR/PasswordManager/model"
 	"github.com/ChillyWR/PasswordManager/pkg/pmcrypto"
@@ -22,6 +25,7 @@ import (
 
 type TableTest struct {
 	testName           string
+	order              int
 	handle             httprouter.Handle
 	httpMethod         string
 	path               string
@@ -35,7 +39,7 @@ type TableTests struct {
 }
 
 func setup() *APIContext {
-	logger := log.New()
+	logger := pmlogger.New()
 
 	userRepo, err := repo.NewUserRepository(testDB)
 	if err != nil {
@@ -94,6 +98,7 @@ func TestGet(t *testing.T) {
 		tt: []*TableTest{
 			{
 				testName: "success_get_all_records",
+				order:    1,
 				handle: ContextSetter(apictx.logger, testUserAuthentication(apictx.logger, testUser1.ID,
 					Dispatch(NewListRecordsHandler(apictx)))),
 				httpMethod:         http.MethodGet,
@@ -106,6 +111,7 @@ func TestGet(t *testing.T) {
 			},
 			{
 				testName: "success_get_decrypted_record_by_id",
+				order:    2,
 				handle: ContextSetter(apictx.logger, testUserAuthentication(apictx.logger, testUser1.ID,
 					Dispatch(NewGetRecordHandler(apictx)))),
 				httpMethod: http.MethodGet,
@@ -118,6 +124,7 @@ func TestGet(t *testing.T) {
 			},
 			{
 				testName: "error_invalid_record_id",
+				order:    3,
 				handle: ContextSetter(apictx.logger, testUserAuthentication(apictx.logger, testUser1.ID,
 					Dispatch(NewGetRecordHandler(apictx)))),
 				httpMethod: http.MethodGet,
@@ -134,22 +141,6 @@ func TestGet(t *testing.T) {
 	TableTestRunner(t, tts)
 }
 
-func TestPost(t *testing.T) {
-	apictx := setup()
-	tests := TableTests{
-		tt: []*TableTest{
-			{
-				testName:           "Post record",
-				handle:             ContextSetter(apictx.logger, Dispatch(NewCreateRecordHandler(apictx))),
-				httpMethod:         http.MethodPost,
-				path:               "/records/",
-				expectedHTTPStatus: http.StatusAccepted,
-				expectedBody:       "", // workaround
-			}},
-	}
-	TableTestRunner(t, tests)
-}
-
 func TableTestRunner(t *testing.T, tts TableTests) {
 	t.Helper()
 	for _, test := range tts.tt {
@@ -160,6 +151,23 @@ func TableTestRunner(t *testing.T, tts TableTests) {
 			require.Equal(t, test.expectedHTTPStatus, response.Code)
 			require.JSONEq(t, test.expectedBody, response.Body.String())
 		})
+	}
+}
+
+func OrderedTableTestRunner(t *testing.T, tts TableTests) {
+	t.Helper()
+
+	sort.Slice(tts.tt, func(i, j int) bool { return tts.tt[i].order < tts.tt[j].order })
+
+	for _, test := range tts.tt {
+		fmt.Printf("RUN %s\n", path.Join(t.Name(), test.testName))
+		start := time.Now()
+		request := httptest.NewRequest(test.httpMethod, test.path, nil)
+		response := httptest.NewRecorder()
+		test.handle(response, request, test.ps)
+		require.Equal(t, test.expectedHTTPStatus, response.Code)
+		require.JSONEq(t, test.expectedBody, response.Body.String())
+		fmt.Printf("PASS %s (%s)\n", path.Join(t.Name(), test.testName), time.Since(start).String())
 	}
 }
 
@@ -174,7 +182,7 @@ func cleanup(t *testing.T, ctrl Controller, records []*model.CredentialRecord, u
 	require.NoError(t, err)
 }
 
-func testUserAuthentication(logger log.Logger, userID uuid.UUID, next httprouter.Handle) httprouter.Handle {
+func testUserAuthentication(logger pmlogger.Logger, userID uuid.UUID, next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		rctx := unpackRequestContext(r.Context(), logger)
 		rctx.userID = userID

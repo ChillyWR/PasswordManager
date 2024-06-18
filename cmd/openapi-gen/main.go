@@ -8,7 +8,7 @@ import (
 
 	"github.com/ChillyWR/PasswordManager/config"
 	"github.com/ChillyWR/PasswordManager/internal/api"
-	"github.com/ChillyWR/PasswordManager/internal/log"
+	pmlogger "github.com/ChillyWR/PasswordManager/internal/logger"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/invopop/yaml"
@@ -20,7 +20,7 @@ const (
 )
 
 func main() {
-	var logger log.Logger = log.New()
+	var logger pmlogger.Logger = pmlogger.New()
 
 	var outputPath string
 	var outputFileType string
@@ -52,7 +52,7 @@ func main() {
 	logger.Infof("Successfully generated. Path: %s", outputPath)
 }
 
-func genJSON(spec *openapi3.T, targetPath string, logger log.Logger) {
+func genJSON(spec *openapi3.T, targetPath string, logger pmlogger.Logger) {
 	data, err := json.Marshal(&spec)
 	if err != nil {
 		logger.Fatalf("Couldn't marshal json: %s", err)
@@ -63,7 +63,7 @@ func genJSON(spec *openapi3.T, targetPath string, logger log.Logger) {
 	}
 }
 
-func genYAML(spec *openapi3.T, targetPath string, logger log.Logger) {
+func genYAML(spec *openapi3.T, targetPath string, logger pmlogger.Logger) {
 	data, err := yaml.Marshal(&spec)
 	if err != nil {
 		logger.Fatalf("Couldn't marshal yaml: %s", err)

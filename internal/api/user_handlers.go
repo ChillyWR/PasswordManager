@@ -3,17 +3,17 @@ package api
 import (
 	"net/http"
 
-	"github.com/ChillyWR/PasswordManager/internal/log"
+	pmlogger "github.com/ChillyWR/PasswordManager/internal/logger"
 	"github.com/ChillyWR/PasswordManager/model"
 )
 
 func NewLoginHandler(apictx *APIContext) http.HandlerFunc {
-	logger := apictx.logger.WithFields(log.Fields{
+	logger := apictx.logger.WithFields(pmlogger.Fields{
 		"handler": "ListUsers",
 	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		rctx := unpackRequestContext(r.Context(), logger)
-		logger = logger.WithFields(log.Fields{
+		logger = logger.WithFields(pmlogger.Fields{
 			"cor_id": rctx.corID.String(),
 		})
 
@@ -51,12 +51,12 @@ func NewLoginHandler(apictx *APIContext) http.HandlerFunc {
 }
 
 func NewListUsersHandler(apictx *APIContext) http.HandlerFunc {
-	logger := apictx.logger.WithFields(log.Fields{
+	logger := apictx.logger.WithFields(pmlogger.Fields{
 		"handler": "ListUsers",
 	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		rctx := unpackRequestContext(r.Context(), logger)
-		logger = logger.WithFields(log.Fields{
+		logger = logger.WithFields(pmlogger.Fields{
 			"cor_id": rctx.corID.String(),
 		})
 
@@ -72,12 +72,12 @@ func NewListUsersHandler(apictx *APIContext) http.HandlerFunc {
 }
 
 func NewGetUserHandler(apictx *APIContext) http.HandlerFunc {
-	logger := apictx.logger.WithFields(log.Fields{
+	logger := apictx.logger.WithFields(pmlogger.Fields{
 		"handler": "GetUser",
 	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		rctx := unpackRequestContext(r.Context(), logger)
-		logger = logger.WithFields(log.Fields{
+		logger = logger.WithFields(pmlogger.Fields{
 			"cor_id": rctx.corID.String(),
 		})
 
@@ -100,12 +100,12 @@ func NewGetUserHandler(apictx *APIContext) http.HandlerFunc {
 }
 
 func NewCreateUserHandler(apictx *APIContext) http.HandlerFunc {
-	logger := apictx.logger.WithFields(log.Fields{
+	logger := apictx.logger.WithFields(pmlogger.Fields{
 		"handler": "CreateUser",
 	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		rctx := unpackRequestContext(r.Context(), logger)
-		logger = logger.WithFields(log.Fields{
+		logger = logger.WithFields(pmlogger.Fields{
 			"cor_id": rctx.corID.String(),
 		})
 
@@ -143,12 +143,12 @@ func NewCreateUserHandler(apictx *APIContext) http.HandlerFunc {
 }
 
 func NewUpdateUserHandler(apictx *APIContext) http.HandlerFunc {
-	logger := apictx.logger.WithFields(log.Fields{
+	logger := apictx.logger.WithFields(pmlogger.Fields{
 		"handler": "UpdateUser",
 	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		rctx := unpackRequestContext(r.Context(), logger)
-		logger = logger.WithFields(log.Fields{
+		logger = logger.WithFields(pmlogger.Fields{
 			"cor_id": rctx.corID.String(),
 		})
 
@@ -178,12 +178,12 @@ func NewUpdateUserHandler(apictx *APIContext) http.HandlerFunc {
 }
 
 func NewDeleteUserHandler(apictx *APIContext) http.HandlerFunc {
-	logger := apictx.logger.WithFields(log.Fields{
+	logger := apictx.logger.WithFields(pmlogger.Fields{
 		"handler": "DeleteUser",
 	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		rctx := unpackRequestContext(r.Context(), logger)
-		logger = logger.WithFields(log.Fields{
+		logger = logger.WithFields(pmlogger.Fields{
 			"cor_id": rctx.corID.String(),
 		})
 

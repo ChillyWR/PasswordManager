@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/ChillyWR/PasswordManager/internal/log"
+	pmlogger "github.com/ChillyWR/PasswordManager/internal/logger"
 	"github.com/ChillyWR/PasswordManager/pkg/pmerror"
 )
 
@@ -37,7 +37,7 @@ type Error struct {
 }
 
 // unpackRequestContext gets and validates RequestContext from ctx
-func unpackRequestContext(ctx context.Context, logger log.Logger) *RequestContext {
+func unpackRequestContext(ctx context.Context, logger pmlogger.Logger) *RequestContext {
 	rctx, ok := ctx.Value(RequestContextName).(*RequestContext)
 	if !ok {
 		logger.Fatalf("Failed to unpack request context, got: %s", rctx)
@@ -47,7 +47,7 @@ func unpackRequestContext(ctx context.Context, logger log.Logger) *RequestContex
 }
 
 // getIDFrom checks if id is set and returns the result of uuid parsing
-func getIDFrom(ps httprouter.Params, logger log.Logger) (uuid.UUID, error) {
+func getIDFrom(ps httprouter.Params, logger pmlogger.Logger) (uuid.UUID, error) {
 	idStr := ps.ByName(IDPPN)
 	if idStr == "" {
 		logger.Fatal("Failed to get path parameter")
@@ -70,7 +70,7 @@ func readBody(body io.ReadCloser, v any) error {
 	return err
 }
 
-func writeResponse(w http.ResponseWriter, body any, statusCode int, logger log.Logger) {
+func writeResponse(w http.ResponseWriter, body any, statusCode int, logger pmlogger.Logger) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	if body != nil {
@@ -82,7 +82,7 @@ func writeResponse(w http.ResponseWriter, body any, statusCode int, logger log.L
 	// logger.Debugf("Response written: %+v", body)
 }
 
-func writeError(w http.ResponseWriter, err error, logger log.Logger) {
+func writeError(w http.ResponseWriter, err error, logger pmlogger.Logger) {
 	writeResponse(w, nil, errorStatus(err), logger)
 }
 

@@ -12,7 +12,7 @@ import (
 	"github.com/invopop/yaml"
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/ChillyWR/PasswordManager/internal/log"
+	pmlogger "github.com/ChillyWR/PasswordManager/internal/logger"
 	"github.com/ChillyWR/PasswordManager/model"
 )
 
@@ -45,12 +45,12 @@ type API struct {
 
 type APIContext struct {
 	ctrl   Controller
-	logger log.Logger
+	logger pmlogger.Logger
 }
 
 type HandlerFunc func(rw http.ResponseWriter, r *http.Request, ctx *RequestContext)
 
-func New(config *Config, ctrl Controller, logger log.Logger) (*API, error) {
+func New(config *Config, ctrl Controller, logger pmlogger.Logger) (*API, error) {
 	if ctrl == nil {
 		return nil, errors.New("ctrl is nil")
 	}
@@ -59,7 +59,7 @@ func New(config *Config, ctrl Controller, logger log.Logger) (*API, error) {
 		config: config,
 		ctx: &APIContext{
 			ctrl:   ctrl,
-			logger: logger.WithFields(log.Fields{"module": "api"}),
+			logger: logger.WithFields(pmlogger.Fields{"module": "api"}),
 		},
 	}, nil
 }
@@ -129,15 +129,15 @@ func (api *API) Stop(ctx context.Context) error {
 	return api.server.Shutdown(ctx)
 }
 
-func NewJSONSpecHandler(parentLogger log.Logger, spec *openapi3.T) http.HandlerFunc {
-	logger := parentLogger.WithFields(log.Fields{"handler": "SpecHandler"})
+func NewJSONSpecHandler(parentLogger pmlogger.Logger, spec *openapi3.T) http.HandlerFunc {
+	logger := parentLogger.WithFields(pmlogger.Fields{"handler": "SpecHandler"})
 	return func(w http.ResponseWriter, r *http.Request) {
 		writeResponse(w, &spec, http.StatusOK, logger)
 	}
 }
 
-func NewYAMLSpecHandler(parentLogger log.Logger, spec *openapi3.T) http.HandlerFunc {
-	logger := parentLogger.WithFields(log.Fields{"handler": "SpecHandler"})
+func NewYAMLSpecHandler(parentLogger pmlogger.Logger, spec *openapi3.T) http.HandlerFunc {
+	logger := parentLogger.WithFields(pmlogger.Fields{"handler": "SpecHandler"})
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/x-yaml")
 		data, err := yaml.Marshal(&spec)
